@@ -160,9 +160,11 @@ end
 vim.api.nvim_create_autocmd('VimResized', {
     pattern = "*",
     callback = function()
-        vim.schedule(function()
-            draw_lastcmdline()
-        end)
+        if(vim.fn.getcmdtype() ~= "") then
+            vim.schedule(function()
+                draw_lastcmdline()
+            end)
+        end
     end
 })
 
