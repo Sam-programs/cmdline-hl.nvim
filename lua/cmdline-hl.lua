@@ -11,8 +11,8 @@ M.config = {
 }
 local cmdline_ns = vim.api.nvim_create_namespace('cmdline')
 
+local nvim_echo = vim.api.nvim_echo
 M.disable_msgs = function()
-    local nvim_echo = vim.api.nvim_echo
     function vim.api.nvim_echo(...)
         if vim.fn.getcmdtype() == "" then
             nvim_echo(...)

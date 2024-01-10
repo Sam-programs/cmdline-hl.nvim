@@ -1,9 +1,8 @@
 # cmdline highligher
-Highlight your cmdline!!
-![preview/preview1](preview/preview1.png)
-![preview/preview2](preview/preview2.png)
-![preview/preview3](preview/preview3.png)
-![preview/preview4](preview/preview4.png)
+Highlight your cmdline!!  
+![preview/preview1](preview/preview1.png)  
+![preview/preview2](preview/preview2.png)  
+![preview/preview3](preview/preview3.png)  
 ## Installation
 ```lua
 return {
