@@ -3,6 +3,8 @@ Highlight your cmdline!!
 ![preview/preview1](preview/preview1.png)  
 ![preview/preview2](preview/preview2.png)  
 ![preview/preview3](preview/preview3.png)  
+NOTE: This is still in development things like custom commands don't work with `:help :bar` or ranges with `:help :bar`.
+Tbh i made this plugin just because i didn't know how to access treesitter in the c code for neovim and nvim_parse_cmd isn't enough, Also just wanted to find a good use-case of `vim.ui_attach` noice has a ton of flickering.
 ## Installation
 ```lua
 return {
