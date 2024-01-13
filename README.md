@@ -57,11 +57,11 @@ return {
 ```
 You might want to change input_hl to something else because some colorschemes don't define FloatFooter for nvim 0.9.5.
 ## How it works
-This uses a hacky method to display colors in the cmdline with `nvim_echo`, Also uses vim's syntax highlighting because i couldn't get treesitter to work in hidden buffers.
+This uses a hacky method to display colors in the cmdline with `nvim_echo`.
 
 ## Known issues
 Since this uses messages if something echos anything the command-line will disappear, But that's unlikely to happen while editing the command-line, 
-I still made a function `disable_msgs` to disable messages in the command-line you can call it with `require('cmdline-hl).disable_msgs()` make sure to call it before your notification plugin loads if you have any.
+I still made a function `disable_msgs` to disable messages in the command-line you can call it with `require('cmdline-hl').disable_msgs()` make sure to call it before your notification plugin loads if you have any.
 
 The Press-Enter prompt appears incorrectly when using multiptle commands e.g. `:ls<cr>:ls` you could fix it by pressing space once u see the prompt.
 
