@@ -1,3 +1,5 @@
+-- TODO: make api to allow users to customize treesitter usage
+-- TODO: make api to allow users to customize prefixes for commands e.g. :lua to 
 local M = {}
 local ts_utils = require('cmdline-hl.ts_utils')
 M.config = {
@@ -7,54 +9,11 @@ M.config = {
         ["?"] = { " ", "FloatFooter" },
         ["="] = { " ", "FloatFooter" },
     },
-    convert_hls = true,
     input_hl = "FloatFooter",
 }
 local cmdline_ns = vim.api.nvim_create_namespace('cmdline')
 
 local nvim_echo = vim.api.nvim_echo
-M.disable_msgs = function()
-    function vim.api.nvim_echo(...)
-        if vim.fn.getcmdtype() == "" then
-            nvim_echo(...)
-        end
-    end
-
-    local notify = vim.notify
-    function vim.notify(...)
-        if vim.fn.getcmdtype() == "" then
-            notify(...)
-        end
-    end
-
-    local vprint = vim.notify
-    function vim.print(...)
-        if vim.fn.getcmdtype() == "" then
-            vprint(...)
-        end
-    end
-
-    local lprint = print
-    function print(...)
-        if vim.fn.getcmdtype() == "" then
-            lprint(...)
-        end
-    end
-
-    local nvim_err_write = vim.api.nvim_err_write
-    function vim.api.nvim_err_write(...)
-        if vim.fn.getcmdtype() == "" then
-            nvim_err_write(...)
-        end
-    end
-
-    local nvim_err_writeln = vim.api.nvim_err_write
-    function vim.api.nvim_err_writeln(...)
-        if vim.fn.getcmdtype() == "" then
-            nvim_err_writeln(...)
-        end
-    end
-end
 
 local call_c = 0
 local cmdtype = ""
@@ -64,18 +23,28 @@ local function is_search(cmdtype)
     return cmdtype == '/' or cmdtype == '?'
 end
 
+local unpack = unpack or table.unpack
 local redrawing = false
-local draw_cmdline = function(prefix, cmdline, cursor)
+local draw_cmdline = function(prefix, cmdline, cursor, force)
+    if vim.fn.getcmdtype() == "" and (not force) then
+        return
+    end
     if redrawing then
         return
     end
     local hl_cmdline = {}
     if (prefix == ':') then
         -- TODO: use nvim_parse_cmd
-        hl_cmdline = ts_utils.get_hl(cmdline, 'vim')
+        if cmdline:match("^%s*lua") then
+            -- lua
+            -- 12345
+            hl_cmdline = { {"l","@keyword"},{"u","@keyword"},{"a","@keyword"},{" "}, unpack(ts_utils.get_hl(cmdline:sub(5), 'lua'))}
+        else
+            hl_cmdline = ts_utils.get_hl(cmdline, 'vim')
+        end
     else
         if is_search(prefix) then
-            hl_cmdline = ts_utils.get_hl(cmdline,'regex')
+            hl_cmdline = ts_utils.get_hl(cmdline, 'regex')
         else
             if prefix == '=' then
                 local hls = vim.api.nvim_parse_expression(cmdline, "", true).highlight
@@ -138,11 +107,9 @@ end
 vim.api.nvim_create_autocmd('VimResized', {
     pattern = "*",
     callback = function()
-        if(vim.fn.getcmdtype() ~= "") then
-            vim.schedule(function()
-                draw_lastcmdline()
-            end)
-        end
+        vim.schedule(function()
+            draw_lastcmdline()
+        end)
     end
 })
 
@@ -188,10 +155,10 @@ local handler = {
         if (is_search(cmdtype)) then
             -- search renders an extra /search we need to wait a bit to overwrite it
             vim.schedule(function()
-                draw_cmdline(cmdtype, data, -1)
+                draw_cmdline(cmdtype, data, -1, true)
             end)
         else
-            draw_cmdline(cmdtype, data, -1)
+            draw_cmdline(cmdtype, data, -1, true)
         end
     end,
     -- only useful for forward movement outside of cmd preview
@@ -199,7 +166,7 @@ local handler = {
         draw_cmdline(cmdtype, data, cursor + 1)
     end,
     -- self note runs before on_win
-    ["cmdline_show"] = function(content, cursor, type, prompt, _, level)
+    ["cmdline_show"] = function(content, cursor, type, prompt, _, _)
         if mapping_has_cr then
             return
         end
@@ -219,31 +186,11 @@ local handler = {
         draw_cmdline(cmdtype, data, cursor)
     end,
 }
-M.syntax_hls_to_ts_hls = function()
-    vim.api.nvim_set_hl(0, 'vimCommand', { link = '@keyword.vim' })
-    vim.api.nvim_set_hl(0, 'vimUsrCmd', { link = '@function.macro.vim' })
 
-    vim.api.nvim_set_hl(0, 'vimFunction', { link = '@function' })
-    vim.api.nvim_set_hl(0, 'vimUsrFunction', { link = '@function' })
-
-    vim.api.nvim_set_hl(0, 'vimParenSep', { link = '@punctuation.bracket.vim' })
-    -- "this" is what the highlight is for
-    -- s/this/
-    vim.api.nvim_set_hl(0, 'vimSubstpat', { link = 'Constant' })
-    vim.api.nvim_set_hl(0, 'vimCollection', { link = '@function' })
-
-    -- s/x/this
-    vim.api.nvim_set_hl(0, 'vimSubstRep4', { link = 'Constant' })
-    -- the / in s/
-    vim.api.nvim_set_hl(0, 'vimSubstDelim', { link = '@operator' })
-end
 local ui_attached = false
 M.setup = function(opts)
     opts = opts or {}
     M.config = vim.tbl_deep_extend("force", M.config, opts)
-    if M.config.convert_hls then
-        M.syntax_hls_to_ts_hls()
-    end
     if not ui_attached then
         -- we render our own cursor
         vim.api.nvim_set_hl(0, 'HIDDEN', { blend = 100, nocombine = true })
@@ -256,6 +203,49 @@ M.setup = function(opts)
                 end
             end
         )
+    end
+end
+
+M.disable_msgs = function()
+    function vim.api.nvim_echo(...)
+        if vim.fn.getcmdtype() == "" then
+            nvim_echo(...)
+        end
+    end
+
+    local notify = vim.notify
+    function vim.notify(...)
+        if vim.fn.getcmdtype() == "" then
+            notify(...)
+        end
+    end
+
+    local vprint = vim.notify
+    function vim.print(...)
+        if vim.fn.getcmdtype() == "" then
+            vprint(...)
+        end
+    end
+
+    local lprint = print
+    function print(...)
+        if vim.fn.getcmdtype() == "" then
+            lprint(...)
+        end
+    end
+
+    local nvim_err_write = vim.api.nvim_err_write
+    function vim.api.nvim_err_write(...)
+        if vim.fn.getcmdtype() == "" then
+            nvim_err_write(...)
+        end
+    end
+
+    local nvim_err_writeln = vim.api.nvim_err_write
+    function vim.api.nvim_err_writeln(...)
+        if vim.fn.getcmdtype() == "" then
+            nvim_err_writeln(...)
+        end
     end
 end
 
