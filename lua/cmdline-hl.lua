@@ -1,4 +1,5 @@
 local M = {}
+local ts_utils = require('cmdline-hl.ts_utils')
 M.config = {
     type_signs = {
         [":"] = { " ", "FloatFooter" },
@@ -59,23 +60,6 @@ local call_c = 0
 local cmdtype = ""
 local data = ""
 local last_ctx = { prefix = "", cmdline = "", cursor = -1 }
-local cmdbuf = vim.api.nvim_create_buf(false, true)
-
-local get_highlighted_cmdline = function(cmdline, syntax)
-    vim.bo[cmdbuf].syntax = syntax
-    vim.api.nvim_buf_set_lines(cmdbuf, 0, -1, false, { cmdline })
-    local highlights = {}
-    for i = 1, #cmdline, 1 do
-        local captures = vim.inspect_pos(cmdbuf, 0, i - 1,
-                { syntax = true, treesitter = false, semantic_tokens = false, extmarks = false })
-            .syntax
-        local capture = captures[#captures] and (captures[#captures].hl_group_link)
-        -- TODO: properly pick highlights
-        highlights[i] = { cmdline:sub(i, i), capture or 'MsgArea' }
-    end
-    return highlights;
-end
-
 local function is_search(cmdtype)
     return cmdtype == '/' or cmdtype == '?'
 end
@@ -87,17 +71,11 @@ local draw_cmdline = function(prefix, cmdline, cursor)
     end
     local hl_cmdline = {}
     if (prefix == ':') then
-        hl_cmdline = get_highlighted_cmdline(cmdline, 'vim')
+        -- TODO: use nvim_parse_cmd
+        hl_cmdline = ts_utils.get_hl(cmdline, 'vim')
     else
         if is_search(prefix) then
-            local hl = string.format("s/%s/", cmdline)
-            hl_cmdline = get_highlighted_cmdline(hl, 'vim')
-            -- TODO: add a range for get_highlighted_cmdline
-            -- remove s/ /
-            table.remove(hl_cmdline, 1)
-            table.remove(hl_cmdline, 1)
-            -- end
-            table.remove(hl_cmdline)
+            hl_cmdline = ts_utils.get_hl(cmdline,'regex')
         else
             if prefix == '=' then
                 local hls = vim.api.nvim_parse_expression(cmdline, "", true).highlight
@@ -120,7 +98,7 @@ local draw_cmdline = function(prefix, cmdline, cursor)
     if (cursor ~= -1 and hl_cmdline[cursor]) then
         local cur_hl = vim.api.nvim_get_hl(0, { name = hl_cmdline[cursor][2], link = false })
         if (cur_hl.fg) then
-            local normal_hl = vim.api.nvim_get_hl(0, { name = "Normal", link = false })
+            local normal_hl = vim.api.nvim_get_hl(0, { name = "MsgArea", link = false })
             local bg = cur_hl.bg
             cur_hl.bg = cur_hl.fg
             cur_hl.fg = bg or normal_hl.bg
