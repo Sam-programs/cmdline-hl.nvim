@@ -104,7 +104,7 @@ local draw_cmdline = function(prefix, cmdline, cursor, force)
         end
         if not should_use_custom_type then
             hl_cmdline = utils.ts_get_hl(cmd, 'vim')
-            for i = 1, #range, 1 do
+            for i = #range,1,-1 do
                 table.insert(hl_cmdline, 1, { range:sub(i, i), M.config.range_hl })
             end
         end
