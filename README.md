@@ -48,7 +48,6 @@ return {
                 ["lua"] = { icon = " ", icon_hl = "FloatFooter", lang = "lua" },
                 ["help"] = { icon = "? ", icon_hl = "FloatFooter"},
                 ["substitute"] = { pat = "%w(.*)", lang = "regex", show_cmd = true },
-                ["global"] = { pat = "%w(.*)", lang = "regex", show_cmd = true },
             },
             input_hl = "FloatFooter",
             -- used to highlight the range in the command e.g. '<,>' in '<,>'s
