@@ -8,7 +8,7 @@ Highlight your cmdline!!
 return {
     {
         'Sam-programs/cmdline-hl.nvim',
-        event = 'UiEnter',
+        event = 'VimEnter',
         opts = {}
     }
 }
