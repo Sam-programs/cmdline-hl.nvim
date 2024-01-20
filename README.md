@@ -4,8 +4,8 @@ Highlight your cmdline!!
 ![preview/preview2](preview/preview2.png)  
 ![preview/preview3](preview/preview3.png)  
 NOTE: This is still in development things like custom commands don't work with `:help :bar` or ranges with `:help :bar`.
-Tbh i made this plugin just because i didn't know how to access treesitter in the c code for neovim and nvim_parse_cmd isn't enough, Also just wanted to find a good use-case of `vim.ui_attach` noice has a ton of flickering.
 ## Installation
+Requires the regex parser for treesitter
 ```lua
 return {
     {
@@ -22,12 +22,11 @@ return {
         'Sam-programs/cmdline-hl.nvim',
         event = 'UiEnter',
         opts = {
-            -- custom prefixes for builtin-commands
             type_signs = {
-                [":"] = { " ", "FloatFooter" },
-                ["/"] = { " ", "FloatFooter" },
-                ["?"] = { " ", "FloatFooter" },
-                ["="] = { " ", "FloatFooter" },
+                [":"] = { " ", "Title" },
+                ["/"] = { " ", "Title" },
+                ["?"] = { " ", "Title" },
+                ["="] = { " ", "Title" },
             },
             -- custom formatting/highlight for commands
             custom_types = {
@@ -45,11 +44,11 @@ return {
                 -- e.g. in 's,>'s/foo/bar/
                 -- pat is checked against s/foo/bar
                 -- you could also use the 'code' function to extract the part that needs highlighting
-                ["lua"] = { icon = " ", icon_hl = "FloatFooter", lang = "lua" },
-                ["help"] = { icon = "? ", icon_hl = "FloatFooter"},
+                ["lua"] = { icon = " ", icon_hl = "Title", lang = "lua" },
+                ["help"] = { icon = "? ", icon_hl = "Title" },
                 ["substitute"] = { pat = "%w(.*)", lang = "regex", show_cmd = true },
             },
-            input_hl = "FloatFooter",
+            input_hl = "Title",
             -- used to highlight the range in the command e.g. '<,>' in '<,>'s
             range_hl = "FloatBorder",
         }

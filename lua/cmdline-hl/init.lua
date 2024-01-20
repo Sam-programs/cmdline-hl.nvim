@@ -3,10 +3,10 @@ local utils = require('cmdline-hl.utils')
 M.config = {
     -- custom prefixes for builtin-commands
     type_signs = {
-        [":"] = { " ", "FloatFooter" },
-        ["/"] = { " ", "FloatFooter" },
-        ["?"] = { " ", "FloatFooter" },
-        ["="] = { " ", "FloatFooter" },
+        [":"] = { " ", "Title" },
+        ["/"] = { " ", "Title" },
+        ["?"] = { " ", "Title" },
+        ["="] = { " ", "Title" },
     },
     -- custom formatting/highlight for commands
     custom_types = {
@@ -24,11 +24,11 @@ M.config = {
         -- e.g. in 's,>'s/foo/bar/
         -- pat is checked against s/foo/bar
         -- you could also use the 'code' function to extract the part that needs highlighting
-        ["lua"] = { icon = " ", icon_hl = "FloatFooter", lang = "lua" },
-        ["help"] = { icon = "? ", icon_hl = "FloatFooter"},
+        ["lua"] = { icon = " ", icon_hl = "Title", lang = "lua" },
+        ["help"] = { icon = "? ", icon_hl = "Title" },
         ["substitute"] = { pat = "%w(.*)", lang = "regex", show_cmd = true },
     },
-    input_hl = "FloatFooter",
+    input_hl = "Title",
     -- used to highlight the range in the command e.g. '<,>' in '<,>'s
     range_hl = "FloatBorder",
 }
@@ -103,7 +103,7 @@ local draw_cmdline = function(prefix, cmdline, cursor, force)
         end
         if not should_use_custom_type then
             hl_cmdline = utils.ts_get_hl(cmd, 'vim')
-            for i = #range,1,-1 do
+            for i = #range, 1, -1 do
                 table.insert(hl_cmdline, 1, { range:sub(i, i), M.config.range_hl })
             end
         end
