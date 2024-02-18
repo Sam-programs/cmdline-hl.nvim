@@ -63,7 +63,8 @@ This uses a hacky method to display colors in the cmdline with `nvim_echo`.
 Since this uses messages if something echos anything the command-line will disappear, But that's unlikely to happen while editing the command-line, 
 I still made a function `disable_msgs` to disable messages in the command-line you can call it with `require('cmdline-hl').disable_msgs()` make sure to call it before your notification plugin loads if you have any.
 
-The Press-Enter prompt appears incorrectly when using multiptle commands e.g. `:ls<cr>:ls` you could fix it by pressing space once u see the prompt.
+~~The Press-Enter prompt appears incorrectly when using multiptle commands e.g. `:ls<cr>:ls` you could fix it by pressing space once u see the prompt.~~
+🔨 automatically scroll the output
 
 Errors in nested command-lines will still render the command-line, e.g. `:<C-r>=f<cr>` raises an error the plugin will keep rendering the cmdline until the user exits the command-line,  
 When the Press-Enter bug happens this issue is fixed.

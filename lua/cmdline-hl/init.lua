@@ -185,10 +185,19 @@ vim.api.nvim_create_autocmd('VimResized', {
         end)
     end
 })
-
 local k = function(str)
-    return vim.api.nvim_replace_termcodes(str, true, true, true)
+    return vim.api.nvim_replace_termcodes(str,true,true,true)
 end
+-- automatically scroll the command output
+vim.on_key(function(key)
+    if (vim.v.scrollstart == 'Unknown' and vim.fn.state('s') ~= '') then
+        if vim.fn.getcmdtype() ~= '' and key == k '<cr>' then
+            vim.api.nvim_input('<cr>')
+            return
+        end
+    end
+end)
+
 -- non-silent mappings that end with <cr> won't appear in the command-line
 local mapping_has_cr = false
 vim.api.nvim_create_autocmd('CmdlineChanged', {
@@ -197,6 +206,7 @@ vim.api.nvim_create_autocmd('CmdlineChanged', {
         mapping_has_cr = vim.fn.getcharstr(1) == k '<cr>'
     end
 })
+
 vim.api.nvim_create_autocmd('CmdlineEnter', {
     pattern = "*",
     callback = function()
@@ -226,10 +236,6 @@ local handler = {
         end
         call_c = 0
         if (utils.is_search(cmdtype)) then
-            -- search renders an extra /search we need to wait a bit to overwrite it
-            vim.schedule(function()
-                draw_cmdline(cmdtype, data, -1, true)
-            end)
         else
             draw_cmdline(cmdtype, data, -1, true)
         end
@@ -293,7 +299,7 @@ M.disable_msgs = function()
         end
     end
 
-    local vprint = vim.notify
+    local vprint = vim.print
     function vim.print(...)
         if vim.fn.getcmdtype() == "" then
             vprint(...)
