@@ -48,12 +48,15 @@ local nvim_echo = vim.api.nvim_echo
 
 local cmdtype = ""
 local data = ""
-local last_ctx = { prefix = "", cmdline = "", cursor = -1 }
+local last_ctx = { prefix = "", cmdline = " ", cursor = -1 }
 local unpack = unpack or table.unpack
 local ghost_text = ''
 local ch_before = -1
 local draw_cmdline = function(prefix, cmdline, cursor, force)
     if vim.fn.getcmdtype() == "" and (not force) then
+        return
+    end
+    if cmdline == last_ctx.cmdline then
         return
     end
     local hl_cmdline = {}
@@ -171,7 +174,7 @@ local draw_cmdline = function(prefix, cmdline, cursor, force)
         })
     else
         if M.config.type_signs[prefix] then
-            table.insert(hl_cmdline, 1, { M.config.type_signs[prefix][1], M.config.type_signs[prefix][2] })
+            table.insert(hl_cmdline, 1,M.config.type_signs[prefix])
         else
             table.insert(hl_cmdline, 1, { prefix, M.config.input_hl })
         end
@@ -200,14 +203,14 @@ M.calculate_ghost_text = function(type, cmdline, cursor)
     if #type > 1 then
         return ''
     end
-    if(#cmdline == 0) then
+    if (#cmdline == 0) then
         return vim.fn.histget(type, -1)
     end
     local pos = cursor - 1
     local prefix = cmdline:sub(1, pos)
     for i = vim.fn.histnr(type), 1, -1 do
         local item = vim.fn.histget(type, i)
-        if item:sub(1, pos)==  prefix then
+        if item:sub(1, pos) == prefix then
             ghost_text = item:sub(pos + 1, #item)
             return ghost_text
         end
@@ -260,7 +263,7 @@ vim.api.nvim_create_autocmd('CmdlineLeave', {
             vim.o.ch = ch_before
         end
         ch_before = -1
-        if abort  then
+        if abort then
             return
         end
         if (utils.is_search(cmdtype)) then
@@ -274,6 +277,7 @@ vim.api.nvim_create_autocmd('CmdlineLeave', {
 vim.api.nvim_create_autocmd('CmdlineEnter', {
     pattern = "*",
     callback = function()
+        last_ctx.cmdline = "not empty"
         abort = false
     end
 })

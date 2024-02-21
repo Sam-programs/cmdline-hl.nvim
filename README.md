@@ -57,7 +57,8 @@ return {
             ghost_text = false,
             -- a function that returns the ghost text to display on the cursor
             -- by default shows ghost text for the next history match, you can complete it by pressing <up>
-            -- TODO: docs for nvim-cmp and wilder.nvim
+            -- WARNING: ghost_text_provider isn't called in a safe context use custom ones from plugins like nvim-cmp might result in crashes
+            -- calling it in a safe context results in the command-line being really slow to update
             ghost_text_provider = require('cmdline-hl').calculate_ghost_text
             -- highlight used for rendering ghost text
             ghost_text_hl = 'Comment',
