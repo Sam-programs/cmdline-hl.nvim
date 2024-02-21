@@ -56,7 +56,7 @@ local draw_cmdline = function(prefix, cmdline, cursor, force)
     if vim.fn.getcmdtype() == "" and (not force) then
         return
     end
-    if cmdline == last_ctx.cmdline then
+    if cmdline == last_ctx.cmdline and (not force) then
         return
     end
     local hl_cmdline = {}
@@ -259,17 +259,17 @@ vim.api.nvim_create_autocmd('CmdlineLeave', {
             return
         end
         cmdline_init = false
+        if (utils.is_search(cmdtype)) then
+            draw_cmdline(cmdtype, data, -1, true)
+        else
+            draw_cmdline(cmdtype, data, -1, true)
+        end
         if (ch_before ~= -1) then
             vim.o.ch = ch_before
         end
         ch_before = -1
         if abort then
             return
-        end
-        if (utils.is_search(cmdtype)) then
-            draw_cmdline(cmdtype, data, -1, true)
-        else
-            draw_cmdline(cmdtype, data, -1, true)
         end
     end
 })
