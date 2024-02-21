@@ -34,6 +34,7 @@ M.config = {
     range_hl = "FloatBorder",
     ghost_text = false,
     ghost_text_hl = 'Comment',
+    inline_ghost_text = false,
     --ghost_text_provider = M.calculate_ghost_text
     -- this is set in where the function is defined
 }
@@ -138,7 +139,7 @@ local draw_cmdline = function(prefix, cmdline, cursor, force)
         end
     end
     if M.config.ghost_text then
-        if cursor ~= -1 then
+        if cursor ~= -1 and ((#hl_cmdline + 1) == cursor or M.config.inline_ghost_text) then
             ghost_text = M.config.ghost_text_provider(prefix, cmdline, cursor)
             for i = #ghost_text, 1, -1 do
                 table.insert(hl_cmdline, cursor, { ghost_text:sub(i, i), M.config.ghost_text_hl })

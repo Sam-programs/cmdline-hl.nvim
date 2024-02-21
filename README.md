@@ -62,6 +62,7 @@ return {
             ghost_text_provider = require('cmdline-hl').calculate_ghost_text
             -- highlight used for rendering ghost text
             ghost_text_hl = 'Comment',
+            inline_ghost_text = false,
         }
     }
 }
