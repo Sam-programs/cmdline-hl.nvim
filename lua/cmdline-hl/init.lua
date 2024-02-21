@@ -56,9 +56,6 @@ local draw_cmdline = function(prefix, cmdline, cursor, force)
     if vim.fn.getcmdtype() == "" and (not force) then
         return
     end
-    if cmdline == last_ctx.cmdline and (not force) then
-        return
-    end
     local hl_cmdline = {}
     local p_cmd = ""
     local should_use_custom_type = false
