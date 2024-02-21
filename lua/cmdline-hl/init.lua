@@ -21,40 +21,45 @@ M.config = {
         -- showcmd is true if the command should be displayed or to only show the icon
         -- pat is used to extract the part of the command that needs highlighting
         -- the part is matched against the raw command you don't need to worry about ranges
-        -- e.g. in 's,>'s/foo/bar/
+        -- e.g. in '<,>'s/foo/bar/
         -- pat is checked against s/foo/bar
         -- you could also use the 'code' function to extract the part that needs highlighting
         ["lua"] = { icon = " ", icon_hl = "Title", lang = "lua" },
         ["help"] = { icon = "? ", icon_hl = "Title" },
         ["substitute"] = { pat = "%w(.*)", lang = "regex", show_cmd = true },
+        --["lua"] = false, -- set an option  to false to disable it
     },
     input_hl = "Title",
     -- used to highlight the range in the command e.g. '<,>' in '<,>'s
     range_hl = "FloatBorder",
+    ghost_text = false,
+    ghost_text_hl = 'Comment',
+    --ghost_text_provider = M.calculate_ghost_text
+    -- this is set in where the function is defined
 }
+
+local k = function(str)
+    return vim.api.nvim_replace_termcodes(str, true, true, true)
+end
 
 local cmdline_ns = vim.api.nvim_create_namespace('cmdline')
 
 local nvim_echo = vim.api.nvim_echo
 
-local call_c = 0
 local cmdtype = ""
 local data = ""
 local last_ctx = { prefix = "", cmdline = "", cursor = -1 }
 local unpack = unpack or table.unpack
-local redrawing = false
+local ghost_text = ''
+local ch_before = -1
 local draw_cmdline = function(prefix, cmdline, cursor, force)
     if vim.fn.getcmdtype() == "" and (not force) then
-        return
-    end
-    if redrawing then
         return
     end
     local hl_cmdline = {}
     local p_cmd = ""
     local should_use_custom_type = false
     if (prefix == ':') then
-        -- TODO: use nvim_parse_cmd
         local ok, parsed = pcall(vim.api.nvim_parse_cmd, cmdline, {})
         if not ok then
             parsed = { cmd = "?" }
@@ -112,21 +117,31 @@ local draw_cmdline = function(prefix, cmdline, cursor, force)
             hl_cmdline = utils.ts_get_hl(cmdline, 'regex')
         else
             if prefix == '=' then
-                -- TODO: move this to a function
                 local hls = vim.api.nvim_parse_expression(cmdline, "", true).highlight
                 for i = 1, #cmdline, 1 do
-                    hl_cmdline[i] = {}
-                    hl_cmdline[i][1] = cmdline:sub(i, i)
+                    hl_cmdline[i] = { cmdline:sub(i, i) }
                 end
                 for _, hl in pairs(hls) do
+                    -- hl[2] is the start 0-indexed
+                    -- hl[3] is the end 1-indexed
+                    -- hl[4] is the highlight
                     for i = hl[2] + 1, hl[3], 1 do
                         hl_cmdline[i][2] = hl[4]
                     end
                 end
             else
+                -- prompts
                 for i = 1, #cmdline, 1 do
                     hl_cmdline[i] = { cmdline:sub(i, i) }
                 end
+            end
+        end
+    end
+    if M.config.ghost_text then
+        if cursor ~= -1 then
+            ghost_text = M.config.ghost_text_provider(prefix, cmdline, cursor)
+            for i = #ghost_text, 1, -1 do
+                table.insert(hl_cmdline, cursor, { ghost_text:sub(i, i), M.config.ghost_text_hl })
             end
         end
     end
@@ -148,12 +163,6 @@ local draw_cmdline = function(prefix, cmdline, cursor, force)
             hl_cmdline[#hl_cmdline + 1] = { ' ', 'Cursor' }
         end
     end
-    -- clear the older cmdlines
-    if (#last_ctx.cmdline + #last_ctx.prefix) > vim.o.columns then
-        redrawing = true
-        vim.cmd.mode()
-        redrawing = false
-    end
     last_ctx = { prefix = prefix, cmdline = cmdline, cursor = cursor }
     if should_use_custom_type then
         table.insert(hl_cmdline, 1, {
@@ -167,13 +176,48 @@ local draw_cmdline = function(prefix, cmdline, cursor, force)
             table.insert(hl_cmdline, 1, { prefix, M.config.input_hl })
         end
     end
+    local len     = 0
+    -- the prefix doesn't follow the 1 item 1 character style so this is needed
+    len           = len + #hl_cmdline[1][1]
+    len           = len + #hl_cmdline - 1
+    local last_ch = vim.o.ch
+    local new_ch  = math.ceil(len / vim.o.columns)
+    if (last_ch ~= new_ch) then
+        if (ch_before == -1) then
+            ch_before = last_ch
+        end
+        vim.o.ch = new_ch
+        -- redraw the statusline properly
+        vim.cmd.redraw()
+    end
     nvim_echo(
         hl_cmdline,
         false, {})
 end
 
+M.calculate_ghost_text = function(type, cmdline, cursor)
+    ghost_text = ''
+    if #type > 1 then
+        return ''
+    end
+    if(#cmdline == 0) then
+        return vim.fn.histget(type, -1)
+    end
+    local pos = cursor - 1
+    local prefix = cmdline:sub(1, pos)
+    for i = vim.fn.histnr(type), 1, -1 do
+        local item = vim.fn.histget(type, i)
+        if item:sub(1, pos)==  prefix then
+            ghost_text = item:sub(pos + 1, #item)
+            return ghost_text
+        end
+    end
+    return ''
+end
+M.config.ghost_text_provider = M.calculate_ghost_text
+
 local draw_lastcmdline = function()
-    draw_cmdline(last_ctx.prefix, last_ctx.cmdline, last_ctx.cursor, true)
+    draw_cmdline(last_ctx.prefix, last_ctx.cmdline, last_ctx.cursor)
 end
 
 -- resizing clears messages
@@ -185,18 +229,6 @@ vim.api.nvim_create_autocmd('VimResized', {
         end)
     end
 })
-local k = function(str)
-    return vim.api.nvim_replace_termcodes(str,true,true,true)
-end
--- automatically scroll the command output
-vim.on_key(function(key)
-    if (vim.v.scrollstart == 'Unknown' and vim.fn.state('s') ~= '') then
-        if vim.fn.getcmdtype() ~= '' and key == k '<cr>' then
-            vim.api.nvim_input('<cr>')
-            return
-        end
-    end
-end)
 
 -- non-silent mappings that end with <cr> won't appear in the command-line
 local mapping_has_cr = false
@@ -215,10 +247,27 @@ vim.api.nvim_create_autocmd('CmdlineEnter', {
 })
 
 local abort = false
+local cmdline_init = false
 vim.api.nvim_create_autocmd('CmdlineLeave', {
     pattern = "*",
     callback = function()
         abort = vim.v.event.abort
+        if not cmdline_init then
+            return
+        end
+        cmdline_init = false
+        if (ch_before ~= -1) then
+            vim.o.ch = ch_before
+        end
+        ch_before = -1
+        if abort  then
+            return
+        end
+        if (utils.is_search(cmdtype)) then
+            draw_cmdline(cmdtype, data, -1, true)
+        else
+            draw_cmdline(cmdtype, data, -1, true)
+        end
     end
 })
 
@@ -230,17 +279,6 @@ vim.api.nvim_create_autocmd('CmdlineEnter', {
 })
 
 local handler = {
-    ["cmdline_hide"] = function()
-        if abort then
-            return
-        end
-        call_c = 0
-        if (utils.is_search(cmdtype)) then
-        else
-            draw_cmdline(cmdtype, data, -1, true)
-        end
-    end,
-    -- only useful for forward movement outside of cmd preview
     ["cmdline_pos"] = function(cursor, _)
         draw_cmdline(cmdtype, data, cursor + 1)
     end,
@@ -249,7 +287,7 @@ local handler = {
         if mapping_has_cr then
             return
         end
-        call_c = call_c + 1
+        cmdline_init = true
         -- index it
         cursor = cursor + 1
         if type == "" then
