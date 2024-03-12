@@ -25,7 +25,7 @@ M.config = {
         -- pat is checked against s/foo/bar
         -- you could also use the 'code' function to extract the part that needs highlighting
         ["lua"] = { pat = "lua[%s=](.*)", icon = " ", icon_hl = "Title", lang = "lua" },
-        ["="] = { pat = "=(.*)", icon = " ", lang = "lua", show_cmd = true },
+        ["="] = { pat = "=(.*)", lang = "lua", show_cmd = true },
         ["help"] = { icon = "? " },
         ["substitute"] = { pat = "%w(.*)", lang = "regex", show_cmd = true },
         --["lua"] = false, -- set an option  to false to disable it

@@ -36,13 +36,13 @@ function M.cmdline_get_hl(cmdline, col)
         retval = M.ts_get_hl(code, ctype.lang or "vim")
         local cmd_len = (#cmd - #code)
         if (ctype.show_cmd) then
-            local cmd_tbl = M.get_ts_hl(cmd:sub(1, cmd_len))
+            local cmd_tbl = M.ts_get_hl(cmd:sub(1, cmd_len),'vim')
             local range_tbl = M.str_to_tbl(range, M.config.range_hl)
             retval = M.tbl_merge(range_tbl, cmd_tbl, retval)
         else
             if col ~= -1 then
                 if (col < #range + cmd_len) then
-                    local cmd_tbl = M.get_ts_hl(cmd:sub(1, cmd_len))
+                    local cmd_tbl = M.ts_get_hl(cmd:sub(1, cmd_len),'vim')
                     local range_tbl = M.str_to_tbl(range, M.config.range_hl)
                     retval = M.tbl_merge(range_tbl, cmd_tbl)
                 else
@@ -130,6 +130,9 @@ function M.split_range(cmdline)
             end
         end
         ::continue::
+        if not char:match("[%w/%\\\\?]") then
+            break
+        end
         i = i + 1
     end
     return cmdline:sub(1, i - 1), cmdline:sub(i)

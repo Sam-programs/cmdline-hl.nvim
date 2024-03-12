@@ -50,6 +50,7 @@ return {
                 -- you could also use the 'code' function to extract the part that needs highlighting
                 -- ["command-name"]  = false -- to disable a type
                 ["lua"] = { icon = " ", icon_hl = "Title", lang = "lua" },
+                ["="] = { pat = "=(.*)", lang = "lua", show_cmd = true },
                 ["help"] = { icon = "? ", icon_hl = "Title" },
                 ["substitute"] = { pat = "%w(.*)", lang = "regex", show_cmd = true },
             },
