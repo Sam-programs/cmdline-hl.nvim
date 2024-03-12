@@ -24,21 +24,23 @@ M.config = {
         -- e.g. in '<,>'s/foo/bar/
         -- pat is checked against s/foo/bar
         -- you could also use the 'code' function to extract the part that needs highlighting
-        ["lua"] = { icon = " ", icon_hl = "Title", lang = "lua" },
-        ["help"] = { icon = "? ", icon_hl = "Title" },
+        ["lua"] = { pat = "lua[%s=](.*)", icon = " ", icon_hl = "Title", lang = "lua" },
+        ["="] = { pat = "=(.*)", icon = " ", lang = "lua", show_cmd = true },
+        ["help"] = { icon = "? " },
         ["substitute"] = { pat = "%w(.*)", lang = "regex", show_cmd = true },
         --["lua"] = false, -- set an option  to false to disable it
     },
     input_hl = "Title",
     -- used to highlight the range in the command e.g. '<,>' in '<,>'s
     range_hl = "FloatBorder",
-    ghost_text = false,
+    ghost_text = true,
     ghost_text_hl = 'Comment',
     inline_ghost_text = false,
     --ghost_text_provider = M.calculate_ghost_text
     -- this is set in where the function is defined
 }
-
+-- TODO: move to a file
+utils.config = M.config
 local k = function(str)
     return vim.api.nvim_replace_termcodes(str, true, true, true)
 end
@@ -58,63 +60,12 @@ local draw_cmdline = function(prefix, cmdline, cursor, force)
         return
     end
     local hl_cmdline = {}
-    local p_cmd = ""
-    local should_use_custom_type = false
+    local ctype = nil
+    local real_cursor = cursor
     if (prefix == ':') then
-        local ok, parsed = pcall(vim.api.nvim_parse_cmd, cmdline, {})
-        if not ok then
-            parsed = { cmd = "?" }
-        end
-        p_cmd = parsed.cmd
-        local range, cmd = utils.split_range(cmdline)
-        local ctype = M.config.custom_types[p_cmd]
-        if ctype and (cmd:match('^%w*%s') or ctype.show_cmd) then
-            should_use_custom_type = true
-            local code = ''
-            if (ctype.code) then
-                code = ctype.code(cmd)
-            else
-                code = cmd:match(ctype.pat or ('%w*%s*(.*)')) or ''
-            end
-            hl_cmdline = { unpack(utils.ts_get_hl(code, ctype.lang or "vim")) }
-            local cmd_len = (#cmd - #code)
-            -- TODO: remove repeated code
-            if (ctype.show_cmd) then
-                local cmd_tbl = utils.str_to_tbl(cmd:sub(1, cmd_len), "@keyword")
-                for i = #cmd_tbl, 1, -1 do
-                    table.insert(hl_cmdline, 1, cmd_tbl[i])
-                end
-                local range_tbl = utils.str_to_tbl(range, M.config.range_hl)
-                for i = #range_tbl, 1, -1 do
-                    table.insert(hl_cmdline, 1, range_tbl[i])
-                end
-            else
-                -- make sure it's a valid cursor first
-                if cursor ~= -1 then
-                    cursor = cursor - cmd_len - #range
-                    if (cursor < 1) then
-                        cursor = cursor + cmd_len + #range
-                        -- restore the command in case the cursor went too far back
-                        local cmd_tbl = utils.str_to_tbl(cmd:sub(1, cmd_len), "@keyword")
-                        for i = #cmd_tbl, 1, -1 do
-                            table.insert(hl_cmdline, 1, cmd_tbl[i])
-                        end
-                        local range_tbl = utils.str_to_tbl(range, M.config.range_hl)
-                        for i = #range_tbl, 1, -1 do
-                            table.insert(hl_cmdline, 1, range_tbl[i])
-                        end
-                    end
-                end
-            end
-        end
-        if not should_use_custom_type then
-            hl_cmdline = utils.ts_get_hl(cmd, 'vim')
-            for i = #range, 1, -1 do
-                table.insert(hl_cmdline, 1, { range:sub(i, i), M.config.range_hl })
-            end
-        end
+        hl_cmdline, cursor, ctype = utils.cmdline_get_hl(cmdline, cursor)
     else
-        if utils.is_search(prefix) then
+        if utils.issearch(prefix) then
             hl_cmdline = utils.ts_get_hl(cmdline, 'regex')
         else
             if prefix == '=' then
@@ -139,14 +90,14 @@ local draw_cmdline = function(prefix, cmdline, cursor, force)
         end
     end
     if M.config.ghost_text then
-        if cursor ~= -1 and ((#hl_cmdline + 1) == cursor or M.config.inline_ghost_text) then
-            ghost_text = M.config.ghost_text_provider(prefix, cmdline, cursor)
+        if real_cursor ~= -1 and ((#hl_cmdline + 1) == cursor or M.config.inline_ghost_text) then
+            ghost_text = M.config.ghost_text_provider(prefix, cmdline, real_cursor) or ''
             for i = #ghost_text, 1, -1 do
                 table.insert(hl_cmdline, cursor, { ghost_text:sub(i, i), M.config.ghost_text_hl })
             end
         end
     end
-    if (cursor ~= -1 and hl_cmdline[cursor]) then
+    if (real_cursor ~= -1 and hl_cmdline[cursor]) then
         local cur_hl = vim.api.nvim_get_hl(0, { name = hl_cmdline[cursor][2], link = false })
         if (cur_hl.fg) then
             local normal_hl = vim.api.nvim_get_hl(0, { name = "MsgArea", link = false })
@@ -160,43 +111,29 @@ local draw_cmdline = function(prefix, cmdline, cursor, force)
         hl_cmdline[cursor][2] = 'InvertCur'
     else
         -- if it's not in the array it must be at the end
-        if cursor ~= -1 then
+        if real_cursor ~= -1 then
             hl_cmdline[#hl_cmdline + 1] = { ' ', 'Cursor' }
         end
     end
     last_ctx = { prefix = prefix, cmdline = cmdline, cursor = cursor }
-    if should_use_custom_type then
+    if ctype then
         table.insert(hl_cmdline, 1, {
-            M.config.custom_types[p_cmd].icon or M.config.type_signs[":"][1],
-            M.config.custom_types[p_cmd].icon_hl or M.config.type_signs[":"][2]
+            M.config.custom_types[ctype].icon or M.config.type_signs[":"][1],
+            M.config.custom_types[ctype].icon_hl or M.config.type_signs[":"][2]
         })
     else
         if M.config.type_signs[prefix] then
-            table.insert(hl_cmdline, 1,M.config.type_signs[prefix])
+            table.insert(hl_cmdline, 1, M.config.type_signs[prefix])
         else
             table.insert(hl_cmdline, 1, { prefix, M.config.input_hl })
         end
-    end
-    local len     = 0
-    -- the prefix doesn't follow the 1 item 1 character style so this is needed
-    len           = len + #hl_cmdline[1][1]
-    len           = len + #hl_cmdline - 1
-    local last_ch = vim.o.ch
-    local new_ch  = math.ceil(len / vim.o.columns)
-    if (last_ch ~= new_ch) then
-        if (ch_before == -1) then
-            ch_before = last_ch
-        end
-        vim.o.ch = new_ch
-        -- redraw the statusline properly
-        vim.cmd.redraw()
     end
     nvim_echo(
         hl_cmdline,
         false, {})
 end
 
-M.calculate_ghost_text = function(type, cmdline, cursor)
+M.history_ghost_text = function(type, cmdline, cursor)
     ghost_text = ''
     if #type > 1 then
         return ''
@@ -215,7 +152,24 @@ M.calculate_ghost_text = function(type, cmdline, cursor)
     end
     return ''
 end
-M.config.ghost_text_provider = M.calculate_ghost_text
+---@diagnostic disable-next-line: unused-local
+M.wildmenu_ghost_text = function(type, cmdline, cursor)
+    if vim.fn.getcmdcompltype() == "" then
+        return
+    end
+    -- we only care about the first entry since other wise
+    local item = vim.fn.getcompletion(cmdline, vim.fn.getcmdcompltype(), 1)[1] or ''
+    for i = #cmdline, 1, -1 do
+        if (cmdline:sub(i, i) == item:sub(1, 1)) then
+            local part = cmdline:sub(i)
+            if (item:sub(1, #part) == part) then
+                return item:sub(#part + 1)
+            end
+        end
+    end
+    return item
+end
+M.config.ghost_text_provider = M.history_ghost_text
 
 local draw_lastcmdline = function()
     draw_cmdline(last_ctx.prefix, last_ctx.cmdline, last_ctx.cursor)
@@ -236,6 +190,7 @@ local mapping_has_cr = false
 vim.api.nvim_create_autocmd('CmdlineChanged', {
     pattern = "*",
     callback = function()
+        ---@diagnostic disable-next-line: redundant-parameter
         mapping_has_cr = vim.fn.getcharstr(1) == k '<cr>'
     end
 })
@@ -257,7 +212,7 @@ vim.api.nvim_create_autocmd('CmdlineLeave', {
             return
         end
         cmdline_init = false
-        if (utils.is_search(cmdtype)) then
+        if (utils.issearch(cmdtype)) then
             draw_cmdline(cmdtype, data, -1, true)
         else
             draw_cmdline(cmdtype, data, -1, true)
@@ -310,6 +265,7 @@ local ui_attached = false
 M.setup = function(opts)
     opts = opts or {}
     M.config = vim.tbl_deep_extend("force", M.config, opts)
+    utils.config = M.config
     if not ui_attached then
         -- we render our own cursor
         vim.api.nvim_set_hl(0, 'HIDDEN', { blend = 100, nocombine = true })
@@ -326,6 +282,7 @@ M.setup = function(opts)
 end
 
 M.disable_msgs = function()
+    ---@diagnostic disable-next-line: duplicate-set-field
     function vim.api.nvim_echo(...)
         if vim.fn.getcmdtype() == "" then
             nvim_echo(...)
@@ -333,6 +290,7 @@ M.disable_msgs = function()
     end
 
     local notify = vim.notify
+    ---@diagnostic disable-next-line: duplicate-set-field
     function vim.notify(...)
         if vim.fn.getcmdtype() == "" then
             notify(...)
@@ -340,6 +298,7 @@ M.disable_msgs = function()
     end
 
     local vprint = vim.print
+    ---@diagnostic disable-next-line: duplicate-set-field
     function vim.print(...)
         if vim.fn.getcmdtype() == "" then
             vprint(...)
@@ -354,6 +313,7 @@ M.disable_msgs = function()
     end
 
     local nvim_err_write = vim.api.nvim_err_write
+    ---@diagnostic disable-next-line: duplicate-set-field
     function vim.api.nvim_err_write(...)
         if vim.fn.getcmdtype() == "" then
             nvim_err_write(...)
@@ -361,6 +321,7 @@ M.disable_msgs = function()
     end
 
     local nvim_err_writeln = vim.api.nvim_err_write
+    ---@diagnostic disable-next-line: duplicate-set-field
     function vim.api.nvim_err_writeln(...)
         if vim.fn.getcmdtype() == "" then
             nvim_err_writeln(...)

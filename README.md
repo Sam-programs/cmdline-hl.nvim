@@ -23,7 +23,9 @@ return {
     {
         'Sam-programs/cmdline-hl.nvim',
         event = 'VimEnter',
-        opts = {
+        config = function()
+            local cmdline_hl = require('cmdline-hl')
+            cmdline_hl.setup({
             type_signs = {
                 [":"] = { " ", "Title" },
                 ["/"] = { " ", "Title" },
@@ -54,16 +56,21 @@ return {
             input_hl = "Title",
             -- used to highlight the range in the command e.g. '<,>' in '<,>'s
             range_hl = "FloatBorder",
-            ghost_text = false,
+            ghost_text = true,
             -- a function that returns the ghost text to display on the cursor
-            -- by default shows ghost text for the next history match, you can complete it by pressing <up>
-            -- WARNING: ghost_text_provider isn't called in a safe context use custom ones from plugins like nvim-cmp might result in crashes
+            -- WARNING: ghost_text_provider isn't called in a safe context use custom ones from plugins like nvim-cmp might result in crashes, 
             -- calling it in a safe context results in the command-line being really slow to update
-            ghost_text_provider = require('cmdline-hl').calculate_ghost_text
+            -- if you plan on writing one make sure to have a mapping that writes to a file so that you are able to delete the function when it breaks
+            -- or you can open a feature request if the below functions aren't sufficient
+            -- you can use this to make the ghost text show the item that would be completed by pressing <up> or the next history match like zsh-autosuggest
+            ghost_text_provider = require('cmdline-hl').history_ghost_text
+            -- this wildmenu function here should work fine with cmp (i think), it works fine with the default completion
+            -- ghost_text_provider = require('cmdline-hl').wildmenu_ghost_text
             -- highlight used for rendering ghost text
             ghost_text_hl = 'Comment',
             inline_ghost_text = false,
-        }
+        })
+        end
     }
 }
 ```
@@ -77,4 +84,3 @@ I still made a function `disable_msgs` to disable messages in the command-line y
 
 Errors in nested command-lines will still render the command-line, e.g. `:<C-r>=f<cr>` raises an error the plugin will keep rendering the cmdline until the user exits the command-line,  
 When the Press-Enter bug happens this issue is fixed.
-
