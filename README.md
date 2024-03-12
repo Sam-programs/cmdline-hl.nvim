@@ -5,8 +5,8 @@ Highlight your cmdline!!
 ![preview/preview3](preview/preview3.png)  
 ![preview/preview4](preview/preview4.png)  
 ## Installation
-Requires 
-treesitter regex parser
+Requires:   
+treesitter `regex` parser  
 nvim-0.9.0+
 ```lua
 return {
@@ -54,9 +54,11 @@ return {
                 ["help"] = { icon = "? ", icon_hl = "Title" },
                 ["substitute"] = { pat = "%w(.*)", lang = "regex", show_cmd = true },
             },
+            -- vim.ui.input() vim.fn.input etc
             input_hl = "Title",
+            input_format = function(input) return input end,
             -- used to highlight the range in the command e.g. '<,>' in '<,>'s
-            range_hl = "FloatBorder",
+            range_hl = "Constant",
             ghost_text = true,
             -- a function that returns the ghost text to display on the cursor
             -- WARNING: ghost_text_provider isn't called in a safe context use custom ones from plugins like nvim-cmp might result in crashes, 
