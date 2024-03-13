@@ -56,7 +56,7 @@ function M.Bang_command(opts)
                         break
                     end
                 end
-                local height = math.min(bufrows, rows - vim.o.ch)
+                local height = math.min(bufrows + 1, rows - vim.o.ch)
                 vim.api.nvim_win_set_config(win, {
                     relative = 'editor',
                     row = rows - height,
@@ -74,12 +74,6 @@ function M.Bang_command(opts)
                         resize_win()
                     end)
                 end
-            })
-            vim.api.nvim_create_autocmd("WinLeave", {
-                callback =
-                    function()
-                        vim.api.nvim_win_hide(win)
-                    end
             })
             vim.api.nvim_win_call(win, function()
                 vim.api.nvim_buf_call(buf, function()
