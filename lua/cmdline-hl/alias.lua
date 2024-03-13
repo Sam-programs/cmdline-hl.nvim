@@ -31,7 +31,7 @@ function M.handle_config()
                     return render_cmd:sub(#render_cmd, #render_cmd)
                 end
             end
-            if (cmd:sub(1, #render_cmd - 1) == render_cmd:sub(1, #render_cmd - 1)) then
+            if (cmd:sub(#cmd - (#render_cmd - 2), #cmd ) == render_cmd:sub(1, #render_cmd - 1)) then
                 return ("<bs>"):rep(#render_cmd - 1) .. alias.str
             end
             return render_cmd:sub(#render_cmd, #render_cmd)
