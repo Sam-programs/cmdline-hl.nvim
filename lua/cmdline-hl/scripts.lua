@@ -47,16 +47,20 @@ function M.Bang_command(opts)
                 local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
                 local bufrows = #lines
                 for i = bufrows, 1, -1 do
-                    if(lines[i]:match("%[Process exited %d+%]")) then
+                    if (lines[i]:match("%[Process exited %d+%]")) then
                         vim.api.nvim_input('<C-\\><C-n>ggGi')
                         dont_render = true
                     end
-                    if (lines[i] ~= '') then
+                    if (not lines[i]:match('^%s*$')) then
                         bufrows = i
                         break
                     end
                 end
-                local height = math.min(bufrows + 1, rows - vim.o.ch)
+                bufrows = bufrows
+                local height = math.min(bufrows, rows - vim.o.ch)
+                if height < 2 then
+                    height = 2
+                end
                 vim.api.nvim_win_set_config(win, {
                     relative = 'editor',
                     row = rows - height,
@@ -67,7 +71,7 @@ function M.Bang_command(opts)
             end
             vim.api.nvim_buf_attach(buf, false, {
                 on_lines = function()
-                    if(not vim.api.nvim_buf_is_valid(buf)) then
+                    if (not vim.api.nvim_buf_is_valid(buf)) then
                         return true
                     end
                     vim.schedule(function()
