@@ -127,6 +127,8 @@ local draw_lastcmdline = function()
     draw_cmdline(last_ctx.prefix, last_ctx.cmdline, last_ctx.cursor)
 end
 
+
+
 -- resizing clears messages
 vim.api.nvim_create_autocmd("VimResized", {
     callback = function()
@@ -148,6 +150,9 @@ vim.api.nvim_create_autocmd("CmdlineChanged", {
 })
 vim.api.nvim_create_autocmd("CmdlineEnter", {
     callback = function()
+        if (vim.v.event.cmdlevel == 1) then
+            vim.v.errmsg = ''
+        end
         mapping_has_cr = false
         last_ctx.cmdline = "not empty"
     end,
@@ -167,6 +172,18 @@ vim.api.nvim_create_autocmd("CmdlineLeave", {
         ch_before = -1
     end,
 })
+
+---@diagnostic disable-next-line: unused-local
+vim.on_key(function(key)
+    if not cmdline_init then
+        return
+    end
+    if vim.v.errmsg ~= "" then
+        local cmdline = vim.fn.getcmdline()
+        vim.api.nvim_input("<C-c>:" .. cmdline)
+    end
+end)
+
 
 local handler = {
     ["cmdline_pos"] = function(cursor, _)
