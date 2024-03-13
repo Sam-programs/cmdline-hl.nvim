@@ -97,6 +97,6 @@ Since this uses messages if something echos anything the command-line will disap
 ~~The Press-Enter prompt appears incorrectly when using multiptle commands e.g. `:ls<cr>:ls` you could fix it by pressing space once u see the prompt.~~
 🔨 got fixed by some sort of side effect? (this is why you should make good git commits)
 
-~~Errors in nested command-lines will still render the command-line, e.g. `:<C-r>=f<cr>` raises an error the plugin will keep rendering the cmdline until the user exits the command-line, ~~ 
+~~Errors in nested command-lines will still render the command-line, e.g. `:<C-r>=f<cr>` raises an error the plugin will keep rendering the cmdline until the user exits the command-line,~~ 
 When the Press-Enter bug happens this issue is fixed.
 🔨 read v:errmsg on every key press, and restore the command-line if there are errors.
