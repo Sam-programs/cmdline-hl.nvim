@@ -1,10 +1,20 @@
 local M = {}
 local config = require("cmdline-hl.config")
+M.config = config.get()
 
 function M.format_table(tbl)
     return tbl
 end
-M.config = config.get()
+
+-- TODO: heavily test this because i don't get how it works
+function M.pack(...)
+    local tbl = {}
+    local len = select("#",...)
+    for i  = 1,len,1 do
+        tbl[#tbl+1] = select(i,...)
+    end
+    return tbl
+end
 
 function M.tbl_merge(...)
     local retval = {}
@@ -50,7 +60,7 @@ function M.split_range(cmdline)
             end
         end
         ::continue::
-        if not char:match("[%w/\\\\?%%$.]") then
+        if not char:match("[%w/\\\\?%%$.<>\'\",+-]") then
             break
         end
         i = i + 1

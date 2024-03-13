@@ -3,12 +3,8 @@ local ts = vim.treesitter
 local config = require("cmdline-hl.config").get()
 local utils = require("cmdline-hl.utils")
 
-function M.cmdline(cmdline, col)
+function M.cmdline(cmdinfo,cmdline, col)
     local retval = {}
-    local ok, cmdinfo = pcall(vim.api.nvim_parse_cmd, cmdline, {})
-    if not ok then
-        cmdinfo = { cmd = "?" }
-    end
     local p_cmd = cmdinfo.cmd
     local ctype = config.custom_types[p_cmd]
     local range, cmd = utils.split_range(cmdline)
@@ -17,7 +13,7 @@ function M.cmdline(cmdline, col)
         if ctype.code then
             code = ctype.code(cmd, cmdinfo)
         else
-            code = cmd:match(ctype.pat or "%w*%s*(.*)")
+            code = cmd:match(ctype.pat or "%w*[%s/](.*)")
         end
     end
     if code then
@@ -42,7 +38,7 @@ function M.cmdline(cmdline, col)
         local range_tbl = utils.str_to_tbl(range, config.range_hl)
         retval = utils.tbl_merge(range_tbl, M.ts(cmd, "vim"))
     end
-    return retval, col, ctype and p_cmd or nil
+    return retval, col, code and p_cmd or nil
 end
 
 -- returns a list of {character,hl} for one line

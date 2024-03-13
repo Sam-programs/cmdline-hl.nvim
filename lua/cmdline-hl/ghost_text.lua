@@ -1,5 +1,5 @@
 local M = {}
-M.history_ghost_text = function(type, cmdline, cursor)
+M.history = function(type, cmdline, cursor)
     if #type > 1 then
         return ""
     end
@@ -17,7 +17,7 @@ M.history_ghost_text = function(type, cmdline, cursor)
     return ""
 end
 ---@diagnostic disable-next-line: unused-local
-M.wildmenu_ghost_text = function(type, cmdline, cursor)
+M.wildmenu = function(type, cmdline, cursor)
     if vim.fn.getcmdcompltype() == "" then
         return
     end

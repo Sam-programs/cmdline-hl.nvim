@@ -1,6 +1,6 @@
 local M = {}
 
-M.config = {
+local config = {
     -- custom prefixes for builtin-commands
     type_signs = {
         [":"] = { " ", "Title" },
@@ -27,32 +27,49 @@ M.config = {
         ["lua"] = {
             pat = "lua[%s=](.*)",
             icon = " ",
-            icon_hl = "Title",
             lang = "lua",
+        },
+        ["Exec"] = {
+            icon = "!",
+            lang = "bash",
+            show_cmd = false,
         },
         ["="] = { pat = "=(.*)", lang = "lua", show_cmd = true },
         ["help"] = { icon = "? " },
         ["substitute"] = { pat = "%w(.*)", lang = "regex", show_cmd = true },
         --["lua"] = false, -- set an option  to false to disable it
     },
+    aliases = {
+        -- str is unmapped keys do with that knowledge what you will
+        -- ["cd"] = { str = "Cd" },
+    },
     -- vim.ui.input() vim.fn.input etc
     input_hl = "Title",
+    -- you can use this to format input like the type_signs table
     input_format = function(input) return input end,
     -- used to highlight the range in the command e.g. '<,>' in '<,>'s
     range_hl = "Constant",
     ghost_text = true,
     ghost_text_hl = "Comment",
     inline_ghost_text = false,
+    -- history works like zsh-autosuggest you can complete it by pressing <up>
     ghost_text_provider = require("cmdline-hl.ghost_text").history,
-    -- this is set in where the function is defined
+    -- you can also use this to get the wildmenu(default completion)'s suggestion
+    -- ghost_text_provider = require("cmdline-hl.ghost_text").history,
 }
 
-function M.set(config)
-    M.config = vim.tbl_deep_extend("force", M.config, config or {})
+function M.set(new_config)
+    new_config = vim.tbl_deep_extend("force", config, new_config or {})
+    -- write to the old pointer
+    for key, value in pairs(new_config) do
+        config[key] = value
+    end
+    local alias = require('cmdline-hl.alias')
+    alias.handle_config()
 end
 
 function M.get()
-    return M.config
+    return config
 end
 
 return M

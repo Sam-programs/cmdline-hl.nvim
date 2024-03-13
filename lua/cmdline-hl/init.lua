@@ -1,6 +1,7 @@
 local M = {}
 local utils = require("cmdline-hl.utils")
 local highlighters = require("cmdline-hl.highlighters")
+local alias = require("cmdline-hl.alias")
 local config = require("cmdline-hl.config")
 M.config = config.get()
 
@@ -20,14 +21,19 @@ local draw_cmdline = function(prefix, cmdline, cursor, force)
     local ctype = nil
     local render_cursor = cursor
     if prefix == ":" then
-        hl_cmdline, render_cursor, ctype = highlighters.cmdline(cmdline, cursor)
+        local ok, cmdinfo = pcall(vim.api.nvim_parse_cmd, cmdline, {})
+        if (not ok) then
+            cmdinfo = { cmd = "?" }
+        end
+        local render_cmdline = alias.cmdline(cmdinfo, cmdline)
+        hl_cmdline, render_cursor, ctype = highlighters.cmdline(cmdinfo, render_cmdline, cursor)
     end
     if utils.issearch(prefix) then
         hl_cmdline = highlighters.ts(cmdline, "regex")
     end
     if prefix == "=" then
         local hls =
-        vim.api.nvim_parse_expression(cmdline, "", true).highlight
+            vim.api.nvim_parse_expression(cmdline, "E", true).highlight
         for i = 1, #cmdline, 1 do
             hl_cmdline[i] = { cmdline:sub(i, i) }
         end
@@ -40,18 +46,18 @@ local draw_cmdline = function(prefix, cmdline, cursor, force)
             end
         end
     end
-    if #hl_cmdline == 0 then
+    if M.config.type_signs[prefix] == nil then
         -- prompts
         for i = 1, #cmdline, 1 do
             hl_cmdline[i] = { cmdline:sub(i, i) }
         end
     end
-    if cursor == -1  then
+    if cursor == -1 then
         goto theend
     end
-    if config.ghost_text then
+    if M.config.ghost_text then
         if
-            ((#hl_cmdline + 1) == cursor or config.inline_ghost_text)
+            ((#hl_cmdline + 1) == render_cursor or M.config.inline_ghost_text)
         then
             local ghost_text = M.config.ghost_text_provider(
                 prefix,
@@ -61,13 +67,13 @@ local draw_cmdline = function(prefix, cmdline, cursor, force)
             for i = #ghost_text, 1, -1 do
                 table.insert(
                     hl_cmdline,
-                    cursor,
+                    render_cursor,
                     { ghost_text:sub(i, i), M.config.ghost_text_hl }
                 )
             end
         end
     end
-    if render_cursor < #hl_cmdline then
+    if render_cursor <= #hl_cmdline then
         local cur_hl = vim.api.nvim_get_hl(
             0,
             { name = hl_cmdline[render_cursor][2], link = false }
@@ -154,7 +160,7 @@ vim.api.nvim_create_autocmd("CmdlineLeave", {
             return
         end
         cmdline_init = false
-        draw_cmdline(cmdtype, data, -1, true)
+        pcall(draw_cmdline, cmdtype, data, -1, true)
         if ch_before ~= -1 then
             vim.o.ch = ch_before
         end
@@ -172,7 +178,6 @@ local handler = {
             return
         end
         cmdline_init = true
-        -- index it
         cursor = cursor + 1
         if type == "" then
             cmdtype = prompt
@@ -198,7 +203,25 @@ M.setup = function(opts)
         ui_attached = true
         vim.ui_attach(cmdline_ns, { ext_cmdline = true }, function(name, ...)
             if handler[name] then
-                handler[name](...)
+                local vargs = utils.pack(...)
+                xpcall(function()
+                        handler[name](unpack(vargs))
+                    end,
+                    function(msg)
+                        if msg == nil then
+                            return
+                        end
+                        local backtrace = debug.traceback(msg, 1)
+                        vim.schedule(
+                            function()
+                                vim.notify(
+                                    'cmdline-hl.nvim: Disabling cmdline highlighting please open an issue with this backtrace, you can copy it with lmouse:\n' ..
+                                    backtrace,
+                                    vim.log.levels.ERROR, {})
+                                vim.api.nvim_input('<esc>:messages<cr>')
+                                M.disable()
+                            end)
+                    end)
             end
         end)
     end
