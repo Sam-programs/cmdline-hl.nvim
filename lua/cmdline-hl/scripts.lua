@@ -14,7 +14,6 @@ function M.Bang_command(opts)
             end
             last_command = cmdstr
             local buf = vim.api.nvim_create_buf(true, true)
-            local emptybuf = vim.api.nvim_create_buf(true, true)
             local rows = vim.o.lines
             if vim.o.stl ~= '' then
                 rows = rows - 1
@@ -25,35 +24,39 @@ function M.Bang_command(opts)
                 row = 1
             end
             local cols = vim.o.columns
-            local win = vim.api.nvim_open_win(emptybuf, true, {
+            local win = vim.api.nvim_open_win(buf, true, {
                 relative = 'editor',
-                row = 0,
+                row = rows - vim.o.ch,
                 col = 0,
-                height = rows - 1 - vim.o.ch,
+                height = 2,
                 width = cols,
             })
             vim.wo[win].nu = false
             vim.wo[win].rnu = false
-            vim.wo[win].winblend = 100
             vim.wo[win].fillchars = "eob: "
             vim.bo[buf].bufhidden = 'wipe'
-            local is_tui = false
+            local dont_render = false
             local function resize_win()
-                if is_tui then
+                if dont_render then
                     return
                 end
-                vim.wo[win].winblend = 0
-                vim.bo[buf].modifiable = true
+                if not vim.api.nvim_win_is_valid(win) then
+                    return
+                end
                 vim.api.nvim_win_set_buf(win, buf)
                 local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
                 local bufrows = #lines
                 for i = bufrows, 1, -1 do
+                    if(lines[i]:match("%[Process exited %d+%]")) then
+                        vim.api.nvim_input('<C-\\><C-n>ggGi')
+                        dont_render = true
+                    end
                     if (lines[i] ~= '') then
                         bufrows = i
                         break
                     end
                 end
-                local height = math.min(bufrows + 1, rows - vim.o.ch)
+                local height = math.min(bufrows, rows - vim.o.ch)
                 vim.api.nvim_win_set_config(win, {
                     relative = 'editor',
                     row = rows - height,
@@ -64,17 +67,19 @@ function M.Bang_command(opts)
             end
             vim.api.nvim_buf_attach(buf, false, {
                 on_lines = function()
+                    if(not vim.api.nvim_buf_is_valid(buf)) then
+                        return true
+                    end
                     vim.schedule(function()
                         resize_win()
                     end)
                 end
             })
-            vim.api.nvim_create_autocmd("TermCLose", {
-                buffer = buf,
-                once = true,
-                callback = function()
-                    resize_win()
-                end
+            vim.api.nvim_create_autocmd("WinLeave", {
+                callback =
+                    function()
+                        vim.api.nvim_win_hide(win)
+                    end
             })
             vim.api.nvim_win_call(win, function()
                 vim.api.nvim_buf_call(buf, function()
@@ -96,7 +101,7 @@ function M.Bang_command(opts)
                                     height = rows - vim.o.ch,
                                     width = cols,
                                 })
-                                is_tui = not is_tui
+                                dont_render = not dont_render
                             end
                         end,
                     })
@@ -113,7 +118,7 @@ function M.Cd_command(opts)
     vim.api.nvim_create_user_command("Cd",
         function(args)
             args = args.fargs
-            if(#args == 0) then
+            if (#args == 0) then
                 vim.cmd.cd()
                 return
             end
