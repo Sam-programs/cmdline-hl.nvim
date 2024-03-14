@@ -25,8 +25,9 @@ local draw_cmdline = function(prefix, cmdline, cursor, force)
         if (not ok) then
             cmdinfo = { cmd = "?" }
         end
-        local render_cmdline = alias.cmdline(cmdinfo, cmdline)
-        hl_cmdline, render_cursor, ctype = highlighters.cmdline(cmdinfo, render_cmdline, cursor)
+        local render_cmdline
+        render_cmdline,render_cursor = alias.cmdline(cmdinfo, cmdline,cursor)
+        hl_cmdline, render_cursor, ctype = highlighters.cmdline(cmdinfo, render_cmdline, render_cursor)
     end
     if utils.issearch(prefix) then
         hl_cmdline = highlighters.ts(cmdline, "regex")

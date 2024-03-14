@@ -25,7 +25,6 @@ local config = {
         -- pat is checked against s/foo/bar
         -- you could also use the 'code' function to extract the part that needs highlighting
         ["lua"] = {
-            pat = "lua[%s=](.*)",
             icon = " ",
             lang = "lua",
         },
@@ -36,7 +35,7 @@ local config = {
         },
         ["="] = { pat = "=(.*)", lang = "lua", show_cmd = true },
         ["help"] = { icon = "? " },
-        ["substitute"] = { pat = "%w(.*)", lang = "regex", show_cmd = true },
+        ["substitute"] = { lang = "regex", show_cmd = true },
         --["lua"] = false, -- set an option  to false to disable it
     },
     aliases = {

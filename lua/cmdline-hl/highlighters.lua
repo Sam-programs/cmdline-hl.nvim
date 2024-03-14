@@ -13,16 +13,15 @@ function M.cmdline(cmdinfo,cmdline, col)
         if ctype.code then
             code = ctype.code(cmd, cmdinfo)
         else
-            code = cmd:match(ctype.pat or "%w*[%s/](.*)")
+            code = cmd:match(ctype.pat or "%w*[%s/]([^|]*)")
         end
     end
     if code then
         retval = M.ts(code, ctype.lang or "vim")
         local cmd_len = (#cmd - #code)
         if ctype.show_cmd then
-            local cmd_tbl = M.ts(cmd:sub(1, cmd_len), "vim")
-            local range_tbl = utils.str_to_tbl(range, config.range_hl)
-            retval = utils.tbl_merge(range_tbl, cmd_tbl, retval)
+            local cmd_tbl = M.ts(cmd:sub(1,cmd_len), "vim")
+            retval = utils.tbl_merge(cmd_tbl, retval)
         else
             if col ~= -1 then
                 if col < #range + cmd_len then
@@ -35,8 +34,7 @@ function M.cmdline(cmdinfo,cmdline, col)
             end
         end
     else
-        local range_tbl = utils.str_to_tbl(range, config.range_hl)
-        retval = utils.tbl_merge(range_tbl, M.ts(cmd, "vim"))
+        retval = M.ts(cmdline, "vim")
     end
     return retval, col, code and p_cmd or nil
 end
