@@ -221,7 +221,7 @@ M.setup = function(opts)
         ui_attached = true
         vim.ui_attach(cmdline_ns, { ext_cmdline = true }, function(name, ...)
             if handler[name] then
-                local vargs = utils.pack(...)
+                local vargs = {...}
                 xpcall(function()
                         handler[name](unpack(vargs))
                     end,

@@ -2,20 +2,6 @@ local M = {}
 local config = require("cmdline-hl.config")
 M.config = config.get()
 
-function M.format_table(tbl)
-    return tbl
-end
-
--- TODO: heavily test this because i don't get how it works
-function M.pack(...)
-    local tbl = {}
-    local len = select("#",...)
-    for i  = 1,len,1 do
-        tbl[#tbl+1] = select(i,...)
-    end
-    return tbl
-end
-
 function M.tbl_merge(...)
     local retval = {}
     for _, tbl in ipairs({ select(1, ...) }) do
