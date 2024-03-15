@@ -119,7 +119,9 @@ local draw_cmdline = function(prefix, cmdline, cursor, force)
         end
         vim.o.ch = new_ch
         -- redraw the statusline properly
-        vim.cmd.redraw()
+        vim.schedule(function()
+            vim.cmd.redraw()
+        end)
     end
     nvim_echo(hl_cmdline, false, {})
 end
@@ -151,9 +153,6 @@ vim.api.nvim_create_autocmd("CmdlineChanged", {
 })
 vim.api.nvim_create_autocmd("CmdlineEnter", {
     callback = function()
-        if (vim.v.event.cmdlevel == 1) then
-            vim.v.errmsg = ''
-        end
         mapping_has_cr = false
         last_ctx.cmdline = "not empty"
     end,
@@ -209,10 +208,7 @@ M.setup = function(opts)
         ui_attached = true
         vim.ui_attach(cmdline_ns, { ext_cmdline = true }, function(name, ...)
             if handler[name] then
-                local vargs = {...}
-                xpcall(function()
-                        handler[name](unpack(vargs))
-                    end,
+                xpcall(handler[name],
                     function(msg)
                         if msg == nil then
                             return
@@ -227,7 +223,7 @@ M.setup = function(opts)
                                 vim.api.nvim_input('<esc>:messages<cr>')
                                 M.disable()
                             end)
-                    end)
+                    end,...)
             end
         end)
     end
