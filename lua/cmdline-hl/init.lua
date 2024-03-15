@@ -174,18 +174,6 @@ vim.api.nvim_create_autocmd("CmdlineLeave", {
     end,
 })
 
----@diagnostic disable-next-line: unused-local
-vim.on_key(function(key)
-    if not cmdline_init then
-        return
-    end
-    if vim.v.errmsg ~= "" then
-        local cmdline = vim.fn.getcmdline()
-        vim.api.nvim_input("<C-c>:" .. cmdline)
-    end
-end)
-
-
 local handler = {
     ["cmdline_pos"] = function(cursor, _)
         draw_cmdline(cmdtype, data, cursor + 1)
