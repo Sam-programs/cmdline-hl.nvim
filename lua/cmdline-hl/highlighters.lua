@@ -21,7 +21,8 @@ function M.cmdline(cmdinfo, cmdline, col)
         local cmd_len = (#cmd - #code)
         if ctype.show_cmd then
             local cmd_tbl = M.ts(cmd:sub(1, cmd_len), "vim")
-            retval = utils.tbl_merge(cmd_tbl, retval)
+            local range_tbl = utils.str_to_tbl(range, config.range_hl)
+            retval = utils.tbl_merge(range_tbl,cmd_tbl, retval)
         else
             if col ~= -1 then
                 if col < #range + cmd_len then
@@ -65,7 +66,7 @@ function M.ts(str, language, default_hl)
         local query = hl_cache[lang]
         local level = 0
         local t = tree:parent()
-        while t  do
+        while t do
             t = t:parent()
             level = level + 1
         end
@@ -86,11 +87,11 @@ function M.ts(str, language, default_hl)
                     if end_col == 0 then
                         end_col = #str
                     end
-                    local priority = pattern_offset + pattern 
+                    local priority = pattern_offset + pattern
                     for i = start_col, end_col - 1, 1 do
                         if (priority_list[i + 1] or 0) <= priority then
                             ret[i + 1][2] = hl
-                            priority_list[i + 1] = priority 
+                            priority_list[i + 1] = priority
                         end
                     end
                     ::continue::
