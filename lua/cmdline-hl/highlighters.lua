@@ -22,7 +22,7 @@ function M.cmdline(cmdinfo, cmdline, col)
         if ctype.show_cmd then
             local cmd_tbl = M.ts(cmd:sub(1, cmd_len), "vim")
             local range_tbl = utils.str_to_tbl(range, config.range_hl)
-            retval = utils.tbl_merge(range_tbl,cmd_tbl, retval)
+            retval = utils.tbl_merge(range_tbl, cmd_tbl, retval)
         else
             if col ~= -1 then
                 if col < #range + cmd_len then
@@ -52,55 +52,44 @@ function M.ts(str, language, default_hl)
     local priority_list = {}
     local parent_tree = ts.get_string_parser(str, language)
     parent_tree:parse(true)
-    parent_tree:for_each_tree(function(tstree,tree)
+    parent_tree:for_each_tree(function(tstree, tree)
         if not tstree then
             return
         end
         local lang = tree:lang()
         if hl_cache[lang] == nil then
             hl_cache[lang] = ts.query.get(lang, "highlights")
+            if hl_cache[lang] == nil then
+                return
+            end
         end
         local query = hl_cache[lang]
-        if query == nil then
-            return
-        end
-        local level = 0
-        local t = tree
-        while t do
-            t = t:parent()
-            level = level + 1
-        end
-        local pattern_offset = level * 1000
-        for pattern, match, _ in query:iter_matches(tstree:root(), str, 0, 1,{ all = true}) do
-            for id, nodes in pairs(match) do
-                for _, node in ipairs(nodes) do
-                    -- `node` was captured by the `name` capture in the match
-                    local hl = "@" .. query.captures[id]
-                    if hl:find("_") then
-                        goto continue
-                    end
-                    local _, start_col = node:start()
-                    local _, end_col = node:end_()
-                    -- it's on another row
-                    -- it's impossible for a node to have a range of 0,x .. 1,0
-                    -- when the command-line is one line
-                    if end_col == 0 then
-                        end_col = #str
-                    end
-                    local priority = pattern_offset + pattern
-                    for i = start_col, end_col - 1, 1 do
-                        if (priority_list[i + 1] or 0) <= priority then
-                            ret[i + 1][2] = hl
-                            priority_list[i + 1] = priority
-                        end
-                    end
-                    ::continue::
+        for id, node, metadata in query:iter_captures(tstree:root(), str, 0, 1, {}) do
+            -- `node` was captured by the `name` capture in the match
+            local hl = "@" .. query.captures[id]
+            if hl:find("_") then
+                goto continue
+            end
+            local _, start_col = node:start()
+            local _, end_col = node:end_()
+            -- it's on another row
+            -- it's impossible for a node to have a range of 0,x .. 1,0
+            -- when the command-line is one line
+            if end_col == 0 then
+                end_col = #str
+            end
+            local priority = 100 + (metadata.priority or 0)
+            for i = start_col, end_col - 1, 1 do
+                if (priority_list[i + 1] or 0) <= priority then
+                    ret[i + 1][2] = hl
+                    priority_list[i + 1] = priority
                 end
             end
+            ::continue::
         end
     end)
     -- remove \n
-    ret[#ret] =nil;
+    ret[#ret] = nil;
     return ret
 end
 
