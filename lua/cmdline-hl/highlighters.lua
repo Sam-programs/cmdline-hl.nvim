@@ -41,7 +41,7 @@ end
 
 local hl_cache = {}
 -- returns a list of {character,hl} for one line
-function M.ts(str, lang, default_hl)
+function M.ts(str, language, default_hl)
     -- this is needed otherwise comments don't get parsed properly
     str = str .. "\n"
     local ret = {}
@@ -49,18 +49,19 @@ function M.ts(str, lang, default_hl)
         ret[i] = { str:sub(i, i), default_hl }
     end
     local priority_list = {}
-    local parent_tree = ts.get_string_parser(str, lang)
+    local parent_tree = ts.get_string_parser(str, language)
     parent_tree:parse(true)
     parent_tree:for_each_tree(function(tstree,tree)
-        if hl_cache[tree:lang()] == nil then
-            hl_cache[tree:lang()] = ts.query.get(tree:lang(), "highlights")
+        local lang = tree:lang()
+        if hl_cache[lang] == nil then
+            hl_cache[lang] = ts.query.get(lang, "highlights")
+            if hl_cache[lang] == nil then
+                return
+            end
         end
-        local query = hl_cache[tree:lang()]
-        if query == nil then
-            return {}
-        end
+        local query = hl_cache[lang]
         local level = 0
-        local t = tree
+        local t = tree:parent()
         while t  do
             t = t:parent()
             level = level + 1

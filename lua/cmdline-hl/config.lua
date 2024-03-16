@@ -27,11 +27,7 @@ local config = {
         ["lua"] = {
             icon = " ",
             lang = "lua",
-        },
-        ["Exec"] = {
-            icon = "!",
-            lang = "bash",
-            show_cmd = false,
+            show_cmd = true
         },
         ["="] = { pat = "=(.*)", lang = "lua", show_cmd = true },
         ["help"] = { icon = "? " },
