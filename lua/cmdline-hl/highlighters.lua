@@ -52,6 +52,9 @@ function M.ts(str, language, default_hl)
     local parent_tree = ts.get_string_parser(str, language)
     parent_tree:parse(true)
     parent_tree:for_each_tree(function(tstree,tree)
+        if not tstree then
+            return
+        end
         local lang = tree:lang()
         if hl_cache[lang] == nil then
             hl_cache[lang] = ts.query.get(lang, "highlights")
