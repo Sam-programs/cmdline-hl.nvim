@@ -7,7 +7,7 @@ Highlight your cmdline!!
 ## Installation
 Requires:   
 treesitter `regex` parser  
-nvim-0.9.0+
+nvim-0.10+
 ```lua
 return {
     {
