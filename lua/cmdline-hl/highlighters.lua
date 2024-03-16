@@ -59,13 +59,13 @@ function M.ts(str, language, default_hl)
         local lang = tree:lang()
         if hl_cache[lang] == nil then
             hl_cache[lang] = ts.query.get(lang, "highlights")
-            if hl_cache[lang] == nil then
-                return
-            end
         end
         local query = hl_cache[lang]
+        if query == nil then
+            return
+        end
         local level = 0
-        local t = tree:parent()
+        local t = tree
         while t do
             t = t:parent()
             level = level + 1
