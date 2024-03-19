@@ -71,7 +71,7 @@ return {
                 -- history works like zsh-autosuggest you can complete it by pressing <up>
                 ghost_text_provider = require("cmdline-hl.ghost_text").history,
                 -- you can also use this to get the wildmenu(default completion)'s suggestion
-                -- ghost_text_provider = require("cmdline-hl.ghost_text").history,
+                -- ghost_text_provider = require("cmdline-hl.ghost_text").wildmenu,
                 })
         end
     }
