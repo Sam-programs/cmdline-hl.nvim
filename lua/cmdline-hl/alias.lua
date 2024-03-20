@@ -38,7 +38,8 @@ function M.handle_config()
                         return key
                     end
                 end
-                if (cmd:sub(#cmd - (#render_cmd - 2), #cmd) == render_cmd:sub(1, #render_cmd - 1)) then
+                cmd = cmd:match("%s*(.*)")
+                if (cmd:sub(1,#render_cmd - 1) == render_cmd:sub(1, #render_cmd - 1)) then
                     return ("<bs>"):rep(#render_cmd - 1) .. alias.str
                 end
                 ::continue::
