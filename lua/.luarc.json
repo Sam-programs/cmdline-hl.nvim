@@ -1,5 +1,5 @@
 {
     "diagnostics.disable": [
         "redundant-parameter"
-    ]
+    ],
 }

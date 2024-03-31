@@ -33,20 +33,13 @@ local draw_cmdline = function(prefix, cmdline, cursor, force)
         hl_cmdline = highlighters.ts(cmdline, "regex")
     end
     if prefix == "=" then
-        local hls =
-            vim.api.nvim_parse_expression(cmdline, "E", true).highlight
-        for i = 1, #cmdline, 1 do
-            hl_cmdline[i] = { cmdline:sub(i, i) }
-        end
-        for _, hl in pairs(hls) do
-            -- hl[2] is the start 0-indexed
-            -- hl[3] is the end 1-indexed
-            -- hl[4] is the highlight
-            for i = hl[2] + 1, hl[3], 1 do
-                hl_cmdline[i][2] = hl[4]
-            end
+        local expr_start = "let a="
+        hl_cmdline = highlighters.ts(expr_start .. cmdline,"vim")
+        for _ = 1,#expr_start,1 do
+            table.remove(hl_cmdline,1)
         end
     end
+
     if M.config.type_signs[prefix] == nil then
         -- prompts
         for i = 1, #cmdline, 1 do
