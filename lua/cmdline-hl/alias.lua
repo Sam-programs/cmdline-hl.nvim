@@ -38,9 +38,11 @@ function M.handle_config()
                         return key
                     end
                 end
-                cmd = cmd:match("%s*(.*)")
-                if (cmd:sub(1,#render_cmd - 1) == render_cmd:sub(1, #render_cmd - 1)) then
-                    return ("<bs>"):rep(#render_cmd - 1) .. alias.str
+                -- lua strncmp where ?
+                if(#cmd == #render_cmd - 1) then
+                    if (cmd:sub(1,#render_cmd - 1) == render_cmd:sub(1, #render_cmd - 1)) then
+                        return ("<bs>"):rep(#render_cmd - 1) .. alias.str
+                    end
                 end
                 ::continue::
             end
