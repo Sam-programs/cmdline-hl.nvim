@@ -46,8 +46,9 @@ function M.ts(str, language, default_hl)
     -- this is needed otherwise comments don't get parsed properly
     str = str .. "\n"
     local ret = {}
-    for i = 1, #str, 1 do
-        ret[i] = { str:sub(i, i), default_hl }
+    local len = vim.fn.strchars(str)
+    for i = 0, len - 1 do
+        ret[i + 1] = { vim.fn.strcharpart(str, i, 1), default_hl }
     end
     local priority_list = {}
     local parent_tree = ts.get_string_parser(str, language)
@@ -81,6 +82,7 @@ function M.ts(str, language, default_hl)
             local priority = 100 + (metadata.priority or 0)
             for i = start_col, end_col - 1, 1 do
                 if (priority_list[i + 1] or 0) <= priority then
+                    if ret[i + 1] == nil then vim.print(ret,i+1,end_col) end
                     ret[i + 1][2] = hl
                     priority_list[i + 1] = priority
                 end
