@@ -79,10 +79,10 @@ function M.ts(str, language, default_hl)
             if end_col == 0 then
                 end_col = #str
             end
+            local char_end_col = vim.str_utfindex(str,end_col)
             local priority = 100 + (metadata.priority or 0)
-            for i = start_col, end_col - 1, 1 do
+            for i = start_col, char_end_col - 1, 1 do
                 if (priority_list[i + 1] or 0) <= priority then
-                    if ret[i + 1] == nil then vim.print(ret,i+1,end_col) end
                     ret[i + 1][2] = hl
                     priority_list[i + 1] = priority
                 end
