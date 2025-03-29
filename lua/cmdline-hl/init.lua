@@ -87,33 +87,6 @@ local draw_cmdline = function(prefix, cmdline, cursor, force)
         hl_cmdline[#hl_cmdline + 1] = { " ", "Cursor" }
     end
     ::theend::
-    local i = 1
-    while i <= #hl_cmdline do
-        local start = i
-        local curstr = ""
-        local len = utils.utflen(hl_cmdline[i][1])
-        if len == 1 then
-            -- ascii/invalid utf8
-            goto continue
-        end
-        -- stylua: ignore
-        if ((i - 1) + len) > #hl_cmdline then
-            -- there are less characters than the utf8 length expects
-            break
-        end
-        for _ = 1, len, 1 do
-            curstr = curstr .. hl_cmdline[i][1]
-            i = i + 1
-        end
-        for _ = 1, len, 1 do
-            table.remove(hl_cmdline, start)
-        end
-        -- Use the highlight from the first character, because that character
-        -- gets the cursor highlight
-        table.insert(hl_cmdline, start, { curstr, hl_cmdline[start][2] })
-        ::continue::
-        i = start + 1
-    end
     last_ctx = { prefix = prefix, cmdline = cmdline, cursor = cursor }
     if ctype then
         table.insert(hl_cmdline, 1, {
