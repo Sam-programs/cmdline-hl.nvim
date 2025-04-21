@@ -22,21 +22,22 @@ local draw_cmdline = function(prefix, cmdline, cursor, force)
     local render_cursor = cursor
     if prefix == ":" then
         local ok, cmdinfo = pcall(vim.api.nvim_parse_cmd, cmdline, {})
-        if (not ok) then
+        if not ok then
             cmdinfo = { cmd = "?" }
         end
         local render_cmdline
-        render_cmdline,render_cursor = alias.cmdline(cmdinfo, cmdline,cursor)
-        hl_cmdline, render_cursor, ctype = highlighters.cmdline(cmdinfo, render_cmdline, render_cursor)
+        render_cmdline, render_cursor = alias.cmdline(cmdinfo, cmdline, cursor)
+        hl_cmdline, render_cursor, ctype =
+            highlighters.cmdline(cmdinfo, render_cmdline, render_cursor)
     end
     if utils.issearch(prefix) then
         hl_cmdline = highlighters.ts(cmdline, "regex")
     end
     if prefix == "=" then
         local expr_start = "let a="
-        hl_cmdline = highlighters.ts(expr_start .. cmdline,"vim")
-        for _ = 1,#expr_start,1 do
-            table.remove(hl_cmdline,1)
+        hl_cmdline = highlighters.ts(expr_start .. cmdline, "vim")
+        for _ = 1, #expr_start, 1 do
+            table.remove(hl_cmdline, 1)
         end
     end
 
@@ -50,9 +51,7 @@ local draw_cmdline = function(prefix, cmdline, cursor, force)
         goto theend
     end
     if M.config.ghost_text then
-        if
-            ((#hl_cmdline + 1) == render_cursor or M.config.inline_ghost_text)
-        then
+        if (#hl_cmdline + 1) == render_cursor or M.config.inline_ghost_text then
             local ghost_text = M.config.ghost_text_provider(
                 prefix,
                 cmdline,
@@ -67,7 +66,7 @@ local draw_cmdline = function(prefix, cmdline, cursor, force)
             end
         end
     end
-    if render_cursor <= #hl_cmdline then
+    if render_cursor < #hl_cmdline then
         local cur_hl = vim.api.nvim_get_hl(
             0,
             { name = hl_cmdline[render_cursor][2], link = false }
@@ -125,17 +124,21 @@ local draw_cmdline = function(prefix, cmdline, cursor, force)
         if M.config.type_signs[prefix] then
             table.insert(hl_cmdline, 1, M.config.type_signs[prefix])
         else
-            table.insert(hl_cmdline, 1, { M.config.input_format(prefix), M.config.input_hl })
+            table.insert(
+                hl_cmdline,
+                1,
+                { M.config.input_format(prefix), M.config.input_hl }
+            )
         end
     end
-    local len     = 0
+    local len = 0
     -- the prefix doesn't follow the 1 item 1 character style so this is needed
-    len           = len + #hl_cmdline[1][1]
-    len           = len + #hl_cmdline - 1
+    len = len + #hl_cmdline[1][1]
+    len = len + #hl_cmdline - 1
     local last_ch = vim.o.ch
-    local new_ch  = math.ceil((len + 1) / vim.o.columns)
-    if (last_ch ~= new_ch) then
-        if (ch_before == -1) then
+    local new_ch = math.ceil((len + 1) / vim.o.columns)
+    if last_ch ~= new_ch then
+        if ch_before == -1 then
             ch_before = last_ch
         end
         vim.o.ch = new_ch
@@ -150,8 +153,6 @@ end
 local draw_lastcmdline = function()
     draw_cmdline(last_ctx.prefix, last_ctx.cmdline, last_ctx.cursor)
 end
-
-
 
 -- resizing clears messages
 vim.api.nvim_create_autocmd("VimResized", {
@@ -229,22 +230,22 @@ M.setup = function(opts)
         ui_attached = true
         vim.ui_attach(cmdline_ns, { ext_cmdline = true }, function(name, ...)
             if handler[name] then
-                xpcall(handler[name],
-                    function(msg)
-                        if msg == nil then
-                            return
-                        end
-                        local backtrace = debug.traceback(msg, 1)
-                        vim.schedule(
-                            function()
-                                vim.notify(
-                                    'cmdline-hl.nvim: Disabling cmdline highlighting please open an issue with this backtrace, you can copy it with lmouse:\n' ..
-                                    backtrace,
-                                    vim.log.levels.ERROR, {})
-                                vim.api.nvim_input('<esc>:messages<cr>')
-                                M.disable()
-                            end)
-                    end,...)
+                xpcall(handler[name], function(msg)
+                    if msg == nil then
+                        return
+                    end
+                    local backtrace = debug.traceback(msg, 1)
+                    vim.schedule(function()
+                        vim.notify(
+                            "cmdline-hl.nvim: Disabling cmdline highlighting please open an issue with this backtrace, you can copy it with lmouse:\n"
+                                .. backtrace,
+                            vim.log.levels.ERROR,
+                            {}
+                        )
+                        vim.api.nvim_input("<esc>:messages<cr>")
+                        M.disable()
+                    end)
+                end, ...)
             end
         end)
     end
