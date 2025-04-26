@@ -66,7 +66,7 @@ local draw_cmdline = function(prefix, cmdline, cursor, force)
             end
         end
     end
-    if render_cursor < #hl_cmdline then
+    if render_cursor <= #hl_cmdline then
         local cur_hl = vim.api.nvim_get_hl(
             0,
             { name = hl_cmdline[render_cursor][2], link = false }

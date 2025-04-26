@@ -25,7 +25,7 @@ function M.cmdline(cmdinfo, cmdline, col)
             retval = utils.tbl_merge(range_tbl, cmd_tbl, retval)
         else
             if col ~= -1 then
-                if col < #range + cmd_len then
+                if col <= range + cmd_len then
                     local cmd_tbl = M.ts(cmd:sub(1, cmd_len), "vim")
                     local range_tbl = utils.str_to_tbl(range, config.range_hl)
                     retval = utils.tbl_merge(range_tbl, cmd_tbl)
@@ -64,7 +64,9 @@ function M.ts(str, language, default_hl)
             end
         end
         local query = hl_cache[lang]
-        for id, node, metadata in query:iter_captures(tstree:root(), str, 0, 1, {}) do
+        for id, node, metadata in
+            query:iter_captures(tstree:root(), str, 0, 1, {})
+        do
             -- `node` was captured by the `name` capture in the match
             local hl = "@" .. query.captures[id]
             if hl:find("_") then
@@ -89,7 +91,7 @@ function M.ts(str, language, default_hl)
         end
     end)
     -- remove \n
-    ret[#ret] = nil;
+    ret[#ret] = nil
     return ret
 end
 
