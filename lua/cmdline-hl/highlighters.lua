@@ -28,7 +28,7 @@ function M.cmdline(cmdinfo, cmdline, col)
                 if col <= #range + cmd_len then
                     local cmd_tbl = M.ts(cmd:sub(1, cmd_len), "vim")
                     local range_tbl = utils.str_to_tbl(range, config.range_hl)
-                    retval = utils.tbl_merge(range_tbl, cmd_tbl)
+                    retval = utils.tbl_merge(range_tbl, cmd_tbl, retval)
                 else
                     col = col - #range - cmd_len
                 end
