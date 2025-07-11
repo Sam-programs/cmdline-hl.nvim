@@ -250,6 +250,13 @@ M.setup = function(opts)
     end
 end
 
+vim.on_key(function(_, pressed)
+    if pressed ~= "" then
+        vim.schedule(vim.cmd.redrawstatus) -- manually re-render the command-line on every key press
+    end
+end)
+
+
 M.disable = function()
     if ui_attached then
         vim.opt_global.guicursor:remove({ "ci:HIDDEN", "c:HIDDEN", "cr:HIDDEN" })
