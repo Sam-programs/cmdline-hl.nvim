@@ -50,7 +50,18 @@ function M.ts(str, language, default_hl)
         ret[i] = { str:sub(i, i), default_hl }
     end
     local priority_list = {}
-    local parent_tree = ts.get_string_parser(str, language)
+    local parent_tree_success, parent_tree =
+        pcall(ts.get_string_parser, str, language)
+    if not parent_tree_success then
+        vim.notify(
+            "Treesitter parser not installed for `"
+                .. language
+                .. "`, cannot continue. \n\n",
+            vim.log.levels.ERROR
+        )
+        error(parent_tree)
+    end
+
     parent_tree:parse(true)
     parent_tree:for_each_tree(function(tstree, tree)
         if not tstree then
@@ -64,7 +75,9 @@ function M.ts(str, language, default_hl)
             end
         end
         local query = hl_cache[lang]
-        for id, node, metadata in query:iter_captures(tstree:root(), str, 0, 1, {}) do
+        for id, node, metadata in
+            query:iter_captures(tstree:root(), str, 0, 1, {})
+        do
             -- `node` was captured by the `name` capture in the match
             local hl = "@" .. query.captures[id]
             if hl:find("_") then
@@ -89,7 +102,7 @@ function M.ts(str, language, default_hl)
         end
     end)
     -- remove \n
-    ret[#ret] = nil;
+    ret[#ret] = nil
     return ret
 end
 
