@@ -26,7 +26,7 @@ local draw_cmdline = function(prefix, cmdline, cursor, force)
             cmdinfo = { cmd = "?" }
         end
         local render_cmdline
-        render_cmdline,render_cursor = alias.cmdline(cmdinfo, cmdline,cursor)
+        render_cmdline, render_cursor = alias.cmdline(cmdinfo, cmdline, cursor)
         hl_cmdline, render_cursor, ctype = highlighters.cmdline(cmdinfo, render_cmdline, render_cursor)
     end
     if utils.issearch(prefix) then
@@ -34,9 +34,9 @@ local draw_cmdline = function(prefix, cmdline, cursor, force)
     end
     if prefix == "=" then
         local expr_start = "let a="
-        hl_cmdline = highlighters.ts(expr_start .. cmdline,"vim")
-        for _ = 1,#expr_start,1 do
-            table.remove(hl_cmdline,1)
+        hl_cmdline = highlighters.ts(expr_start .. cmdline, "vim")
+        for _ = 1, #expr_start, 1 do
+            table.remove(hl_cmdline, 1)
         end
     end
 
@@ -223,6 +223,17 @@ local ui_attached = false
 M.setup = function(opts)
     config.set(opts)
     if not ui_attached then
+
+        local parent_tree_success =
+            pcall(vim.treesitter.get_string_parser, "", "regex")
+        if not parent_tree_success then
+            vim.notify(
+                "\n\ncmdline-hl.nvim: Missing treesitter parser for `regex` \n",
+                vim.log.levels.ERROR
+            )
+            error()
+        end
+
         -- we render our own cursor
         vim.api.nvim_set_hl(0, "HIDDEN", { blend = 100, nocombine = true })
         vim.opt_global.guicursor:append({ "ci:HIDDEN", "c:HIDDEN", "cr:HIDDEN" })
@@ -244,7 +255,7 @@ M.setup = function(opts)
                                 vim.api.nvim_input('<esc>:messages<cr>')
                                 M.disable()
                             end)
-                    end,...)
+                    end, ...)
             end
         end)
     end
