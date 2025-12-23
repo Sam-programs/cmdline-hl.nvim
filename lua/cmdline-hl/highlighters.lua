@@ -54,7 +54,7 @@ function M.ts(str, language, default_hl)
         pcall(ts.get_string_parser, str, language)
     if not parent_tree_success then
         vim.notify(
-            "Treesitter parser not installed for `"
+            "cmdline-hl.nvim: Missing treesitter parser for `"
                 .. language
                 .. "`, cannot continue. \n\n",
             vim.log.levels.ERROR
