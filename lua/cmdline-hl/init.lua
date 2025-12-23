@@ -236,7 +236,7 @@ M.setup = function(opts)
     config.set(opts)
     if not ui_attached then
         local parent_tree_success =
-            pcall(vim.treesitter.get_string_parser, "", "regex")
+            pcall(vim.treesitter.get_string_parser, "10", "regex")
         if not parent_tree_success then
             vim.notify(
                 "\n\ncmdline-hl.nvim: Missing treesitter parser for `regex` \n",
