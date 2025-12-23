@@ -179,14 +179,26 @@ vim.api.nvim_create_autocmd("CmdlineEnter", {
     end,
 })
 
+local commands_echo = {
+    ["set"] = 1,
+}
+
 local cmdline_init = false
 vim.api.nvim_create_autocmd("CmdlineLeave", {
     callback = function()
         if not cmdline_init then
             return
         end
+        local ok, cmdinfo = pcall(vim.api.nvim_parse_cmd, data, {})
+        if (not ok) then
+            cmdinfo = { cmd = "?" }
+        end
+        if commands_echo[cmdinfo.cmd] then
+            nvim_echo({}, false, {});
+        else
+            pcall(draw_cmdline, cmdtype, data, -1, true)
+        end
         cmdline_init = false
-        pcall(draw_cmdline, cmdtype, data, -1, true)
         if ch_before ~= -1 then
             vim.o.ch = ch_before
         end
@@ -223,7 +235,6 @@ local ui_attached = false
 M.setup = function(opts)
     config.set(opts)
     if not ui_attached then
-
         local parent_tree_success =
             pcall(vim.treesitter.get_string_parser, "", "regex")
         if not parent_tree_success then

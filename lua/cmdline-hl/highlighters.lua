@@ -55,8 +55,8 @@ function M.ts(str, language, default_hl)
     if not parent_tree_success then
         vim.notify(
             "cmdline-hl.nvim: Missing treesitter parser for `"
-                .. language
-                .. "`, cannot continue. \n\n",
+            .. language
+            .. "`, cannot continue. \n\n",
             vim.log.levels.ERROR
         )
         error(parent_tree)
@@ -76,7 +76,7 @@ function M.ts(str, language, default_hl)
         end
         local query = hl_cache[lang]
         for id, node, metadata in
-            query:iter_captures(tstree:root(), str, 0, 1, {})
+        query:iter_captures(tstree:root(), str, 0, 1, {})
         do
             -- `node` was captured by the `name` capture in the match
             local hl = "@" .. query.captures[id]
