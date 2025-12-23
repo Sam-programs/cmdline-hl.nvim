@@ -235,16 +235,6 @@ local ui_attached = false
 M.setup = function(opts)
     config.set(opts)
     if not ui_attached then
-        local parent_tree_success =
-            pcall(vim.treesitter.get_string_parser, "10", "regex")
-        if not parent_tree_success then
-            vim.notify(
-                "\n\ncmdline-hl.nvim: Missing treesitter parser for `regex` \n",
-                vim.log.levels.ERROR
-            )
-            error()
-        end
-
         -- we render our own cursor
         vim.api.nvim_set_hl(0, "HIDDEN", { blend = 100, nocombine = true })
         vim.opt_global.guicursor:append({ "ci:HIDDEN", "c:HIDDEN", "cr:HIDDEN" })
