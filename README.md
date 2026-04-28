@@ -1,3 +1,17 @@
+# NOTICE:
+Neovim has cmdline hightlighting now. You can enable it with:     
+```lua
+require("vim._core.ui2").enable({})
+```
+I believe you can customize it with [tiny-cmdline.nvim](https://github.com/rachartier/tiny-cmdline.nvim)—However, I haven't tried it yet.   
+I won't stop working on this plugin. I am just mentioning that cmdline highlighting is a part of neovim now.    
+To remove this notice add:      
+```lua
+    remove_notice = true,
+```
+to your config.    
+Thank you for using my plugin while it was relevant.      
+
 # cmdline highligher
 Highlight your cmdline!!  
 ![preview/preview1](preview/preview1.png)  
@@ -72,7 +86,10 @@ return {
                 ghost_text_provider = require("cmdline-hl.ghost_text").history,
                 -- you can also use this to get the wildmenu(default completion)'s suggestion
                 -- ghost_text_provider = require("cmdline-hl.ghost_text").wildmenu,
-                })
+
+                -- remove the notice to read the readme.md
+                remove_notice = false,
+                }),
         end
     }
 }

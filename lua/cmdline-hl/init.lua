@@ -175,7 +175,6 @@ vim.api.nvim_create_autocmd("CmdlineChanged", {
 vim.api.nvim_create_autocmd("CmdlineEnter", {
     callback = function()
         mapping_has_cr = false
-        last_ctx.cmdline = "not empty"
     end,
 })
 
@@ -235,6 +234,9 @@ local ui_attached = false
 M.setup = function(opts)
     config.set(opts)
     if not ui_attached then
+        if not M.config.remove_notice then 
+            vim.notify("Cmdline-hl.nvim: check the README on github", vim.log.levels.WARN);
+        end
         -- we render our own cursor
         vim.api.nvim_set_hl(0, "HIDDEN", { blend = 100, nocombine = true })
         vim.opt_global.guicursor:append({ "ci:HIDDEN", "c:HIDDEN", "cr:HIDDEN" })

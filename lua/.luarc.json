@@ -1,7 +1,0 @@
-{
-    "diagnostics.disable": [
-        "redundant-parameter",
-        "unbalanced-assignments",
-        "unbalanced-assignments"
-    ],
-}

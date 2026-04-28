@@ -19,11 +19,11 @@ local config = {
         -- }
         -- lang is the treesitter language to use for the commands
         -- showcmd is true if the command should be displayed or to only show the icon
+        -- you could also use the 'code' function to extract the part that needs highlighting
         -- pat is used to extract the part of the command that needs highlighting
         -- the part is matched against the raw command you don't need to worry about ranges
         -- e.g. in '<,>'s/foo/bar/
         -- pat is checked against s/foo/bar
-        -- you could also use the 'code' function to extract the part that needs highlighting
         ["="] = { pat = "=(.*)", lang = "lua", show_cmd = true },
         ["help"] = { icon = "? " },
         ["substitute"] = { lang = "regex", show_cmd = true },
@@ -46,6 +46,9 @@ local config = {
     ghost_text_provider = require("cmdline-hl.ghost_text").history,
     -- you can also use this to get the wildmenu(default completion)'s suggestion
     -- ghost_text_provider = require("cmdline-hl.ghost_text").history,
+    
+    -- remove the notice that neovim has cmdline highlight by default now
+    remove_notice = false,
 }
 
 function M.set(new_config)

@@ -144,18 +144,18 @@ function M.Cd_command(opts)
             nargs = "*",
             complete =
                 function(_, cmdline)
-                    local args = vim.split(cmdline, " ")
                     local cwd = vim.fn.getcwd()
-                    args[1] = 'zoxide'
-                    table.insert(args, 2, 'query')
-                    table.insert(args, 3, '--exclude')
-                    table.insert(args, 4, cwd)
-                    table.insert(args, 5, '--list')
-                    args[6] = vim.fn.expand(args[6])
-                    if (args[7]) then
-                        args[7] = vim.fn.expand(args[7])
-                    end
+
+                    local cmd_info = vim.split(cmdline, " ")
+                    -- cmd_info[1] is 'cd'
+                    local match_1 = vim.fn.expand(cmd_info[2])
+                    local match_2 = vim.fn.expand(cmd_info[3] or "")
+                    local args = {
+                        'zoxide', 'query', '--exclude', cwd, '--list', match_1, match_2
+                    }
+
                     local stdout = vim.system(args):wait().stdout or ''
+
                     local output = vim.split(stdout, '\n')
                     for i = 1, #output, 1 do
                         local home = vim.env.HOME
